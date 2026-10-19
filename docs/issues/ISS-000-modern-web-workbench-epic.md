@@ -65,15 +65,19 @@
   - [`ISS-002`：实现可视化注册流程与最终结果提取流程编排器（参考 Automa / n8n 步骤流）](./ISS-002-visual-flow-builder.md)（依赖 `ISS-001` 的工作台容器）
   - [`ISS-003`：实现批量账号智能导入预览向导与多模式账号登录/邮箱核验工作流](./ISS-003-account-import-wizard-and-verification.md)（依赖 `ISS-001` 的工作台容器）
   - [`ISS-004`：实现代理池可视化面板与“执行/达成结果满 X 次自动换 IP”轮换引擎](./ISS-004-proxy-pool-and-auto-ip-rotation.md)（依赖 `ISS-001` 的工作台容器）
+  - [`ISS-005`：重构企业级高密度工作台界面（去卡片化、去说教文案、对比度分区与方案 A 布局）](./ISS-005-enterprise-ui-decarding-and-contrast-workbench.md)（统一升级 `ISS-001`～`ISS-004` 的前端呈现层与组件语言）
 
 ---
 
 ## 当前进展
 
-- **已完成本地开发、整合与自动化验收（2026-10-19）**：ISS-001 工作台与任务抽屉、ISS-002 九节点流程编排、ISS-003 智能导入与账号/邮箱核验、ISS-004 代理测速与轮换全部整合；各子 Issue 已更新当前结果和对应测试。
+- **已完成本地开发、整合与自动化验收（2026-10-19）**：ISS-001 工作台与任务抽屉、ISS-002 九节点流程编排、ISS-003 智能导入与账号/邮箱核验、ISS-004 代理测速与轮换，以及 ISS-005 企业级高密度界面重构全部整合；各子 Issue 已更新当前结果和对应测试，最终视觉待用户评审。
 - **验证结果**：`uv run pytest` 全量 **187 passed**；截图验收全量复跑同样 **187 passed**。最后的恢复默认验证码联动、已完成账号主动重验及代理/界面回归 **90 passed**；`uv run ruff check` **All checks passed**。原有 7 处 Ruff 长行仅作等价换行，不改变生产隔离归档逻辑。
 - 浏览器验收覆盖真实剪贴板、跨刷新/搜索多选、单行显隐、抽屉改密、九节点排序/禁用持久化、正则预览、拖拽导入、代理测速/IP/延迟/换轮和 360/768/1440px 布局；CLI 子进程启动与退出亦已验证。执行器使用本地拦截页面、受控网络响应和临时 SQLite/DPAPI，未调用真实生产账号、邮箱或外部代理服务。
 - 试用入口：双击 `启动Web界面.cmd` 或运行 `uv run agnes --config config.local.toml web`。使用说明已同步 `README.md`、`docs/操作说明.md`、`docs/状态规则.md`。无已知开发阻碍；真实网站页面和授权邮箱/代理的可用性仍以用户环境实测为准，不把本地模拟结果冒充真实注册成果。
 - 公开交付：[zhuceji（注册机）](https://github.com/axgiroud312-byte/zhuceji)，默认分支 `main`；完整代码与 ISS-000～004 的交付统一在 [PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，分支 `feat/modern-web-workbench`，保持待评审、未自动合并。
 - 公开发布回归：`uv run pytest` **189 passed**（增加显式迁移输入保护），`uv run ruff check` **All checks passed**，`node --check tools/export_workbook.mjs` 通过；57 个版本控制文件的禁止路径/凭证形态/私人绝对路径扫描复核为 0 项。公开版移除了桌面档案默认输入，并明确 Excel 可选运行库限制。
 - 保留与清理：测试 Web/CLI/浏览器进程均按 fixture 关闭；验收截图保留在 `%LOCALAPPDATA%\Temp\opencode\agnes-workbench-{desktop,flows,import,proxies}.png`，临时数据库由 pytest 临时目录管理。没有创建临时工作树；主工作区、既有配置、凭证、数据和生产归档保留在本机，公开提交排除真实资料、私有生产说明及一次性救援脚本。
+- **ISS-005 最新整体回归**：`uv run pytest` **236 passed**，`uv run ruff check` **All checks passed**，`git diff --check` 通过。152 个原有静态 DOM id 全部保留，后端 API、数据库与调度规则未改动。工作台升级为 196px 暗部侧栏、36px 紧凑指标带、全幅数据表与默认折叠的底部深色终端；流程收敛为单个九行手风琴，模式统一为可键盘操作的分段按钮。
+- **最新视觉证据**：真实 Chrome 155.0.8059.80 验证五视图 × 1440/768/360px × 深浅主题共 30 组，无页面或视图横向溢出；另覆盖 18 组已填充预览/展开表单、三种宽度的运行终端。1440×1000 下表格占队列工作区 91.37%（视口高度 80.95%）。截图与同名尺寸 JSON 位于 `%LOCALAPPDATA%\Temp\opencode\agnes-workbench-{视图}-{宽度}-{主题}.{png,json}`；扩展场景命名及复验命令见 ISS-005。
+- **交付与收尾**：ISS-000～005 统一更新 [PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，分支 `feat/modern-web-workbench`，仅提交评审、不合并。测试服务/浏览器/CLI 由 fixture 关闭，无本次临时工作树；保留主工作区、生产资料及截图证据，清理本次无关临时产物。无已知新增阻碍；真实站点/授权邮箱/代理及 Excel 可选运行库限制仍按原边界说明。

@@ -65,3 +65,4 @@
 - 已完善 DOM/网络/剪贴板/Storage/自定义结果来源，提交未知恢复不重新创建目标；Token 模式明确为可信站内跳转与非空 Token 同时成立。
 - 验收通过：新增 `tests/test_flow_workbench.py` 的 67 项本地配置与 Playwright 用例，连同相关既有测试 75 项通过；Web 端 `test_iss002_pipeline_selector_steps_regex_and_reset` 验证九节点、转义选择器、排序/禁用持久化、实时正则与还原（包括清除旧人工验证码标志）。已纳入全量 **187 passed**、最终专项 **90 passed**，Ruff 通过；详见 ISS-000。
 - 公开交付：[PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，与 ISS-000～004 整体提交，待评审、未自动合并；发布回归全量 189 项通过。
+- ISS-005 呈现升级：九节点直接渲染为单个连续手风琴列表，去除阶段卡片与内部配置字段标签；保留 `.pipeline/.pipe-step/.pipe-head`、插入位置及定位助手钩子。登录标准改为分段按钮，节点支持 Enter/空格和展开状态语义。Chrome 三视口双主题同时覆盖折叠与全部展开、长文本正则预览；最新全量 **236 passed**、Ruff 通过，统一更新 PR #1 待评审，证据见 ISS-005。

@@ -9,16 +9,20 @@ WEB_HTML = r"""<!DOCTYPE html>
 <title>Agnes 注册机可视化控制台 — 流程编排 · 智能导号 · 代理池轮换</title>
 <style>
   :root[data-theme="dark"] {
-    --bg: #090d16;
-    --bg-sidebar: #0f172a;
-    --bg-card: #151f32;
-    --bg-card-hover: #1e293b;
-    --bg-input: #0b1120;
-    --border: #26334d;
+    color-scheme: dark;
+    --bg-canvas: #090a0f;
+    --bg-surface: #11131a;
+    --bg-elevated: #171a24;
+    --bg-terminal: #06070b;
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --bg: var(--bg-canvas);
+    --bg-sidebar: var(--bg-canvas);
+    --bg-input: var(--bg-elevated);
+    --border: var(--border-subtle);
     --border-focus: #3b82f6;
-    --text: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #8b9bb4;
+    --text: #eceef4;
+    --text-secondary: #b6bbca;
+    --text-muted: #8d94a6;
     --primary: #3b82f6;
     --primary-hover: #2563eb;
     --primary-soft: rgba(59, 130, 246, 0.14);
@@ -33,12 +37,16 @@ WEB_HTML = r"""<!DOCTYPE html>
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
   :root[data-theme="light"] {
-    --bg: #f1f5f9;
-    --bg-sidebar: #ffffff;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f8fafc;
-    --bg-input: #f8fafc;
-    --border: #e2e8f0;
+    color-scheme: light;
+    --bg-canvas: #f3f4f6;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f8fafc;
+    --bg-terminal: #06070b;
+    --border-subtle: #e5e7eb;
+    --bg: var(--bg-canvas);
+    --bg-sidebar: var(--bg-canvas);
+    --bg-input: var(--bg-elevated);
+    --border: var(--border-subtle);
     --border-focus: #2563eb;
     --text: #0f172a;
     --text-secondary: #334155;
@@ -57,20 +65,28 @@ WEB_HTML = r"""<!DOCTYPE html>
     --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
   }
   * { box-sizing: border-box; }
+  :root { --sidebar-width: 196px; --terminal-height: 34px; }
+  [hidden] { display: none !important; }
+  html { height: 100%; }
   body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     background: var(--bg);
     color: var(--text);
+    font-size: 13px;
     line-height: 1.5;
     display: flex;
-    min-height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
   }
+  button, input, select, textarea { font: inherit; }
+  button { touch-action: manipulation; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* Sidebar */
   .sidebar {
-    width: 230px;
+    width: var(--sidebar-width);
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border);
     display: flex;
@@ -80,82 +96,78 @@ WEB_HTML = r"""<!DOCTYPE html>
     bottom: 0;
     left: 0;
     z-index: 100;
-    padding: 18px 14px;
+    padding: 16px 10px;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 8px 18px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 14px;
+    gap: 10px;
+    padding: 0 8px 24px;
   }
   .brand-logo {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: #fff;
-    font-weight: 800;
-    font-size: 19px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
   .brand-title {
-    font-size: 15.5px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 650;
     line-height: 1.25;
   }
   .brand-sub {
-    font-size: 11.5px;
+    font-size: 10px;
     color: var(--text-muted);
   }
   .nav-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 3px;
     flex: 1;
   }
   .nav-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 11px 13px;
-    border-radius: 10px;
-    border: 1px solid transparent;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 0;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     text-align: left;
     transition: all 0.15s;
   }
   .nav-item:hover {
-    background: var(--bg-card-hover);
+    background: var(--bg-elevated);
     color: var(--text);
   }
   .nav-item.active {
-    background: var(--primary-soft);
-    color: var(--primary);
-    border-color: rgba(59, 130, 246, 0.3);
+    background: var(--bg-elevated);
+    color: var(--text);
+    box-shadow: inset 2px 0 var(--primary);
   }
   .nav-badge {
-    font-size: 11.5px;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.16);
-    color: var(--text-secondary);
+    font-size: 10px;
+    color: var(--text-muted);
     font-family: Consolas, monospace;
     flex-shrink: 0;
     white-space: nowrap;
   }
   .sidebar-footer {
-    padding-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
-    font-size: 11.5px;
+    font-size: 10px;
     color: var(--text-muted);
     display: flex;
     flex-direction: column;
@@ -164,54 +176,57 @@ WEB_HTML = r"""<!DOCTYPE html>
 
   /* Main Area */
   .main-shell {
-    margin-left: 230px;
+    margin-left: var(--sidebar-width);
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding-bottom: 90px;
+    height: 100dvh;
+    padding-bottom: var(--terminal-height);
   }
 
   /* Sticky Topbar */
   .topbar {
-    position: sticky;
-    top: 0;
     z-index: 90;
     background: var(--bg-sidebar);
     border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
+    padding: 7px 12px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 6px;
+    min-height: 44px;
+    flex-shrink: 0;
   }
   .topbar-left, .topbar-right {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
+    min-width: 0;
   }
+  .topbar-left { flex: 1; }
+  #batchSelect { width: 150px; font-size: 11px; }
+  #runLimitInput { width: 66px; font-size: 11px; }
   .status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 13px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 700;
-    background: var(--success-soft);
+    gap: 6px;
+    padding: 0 4px 0 0;
+    font-size: 11px;
+    font-weight: 500;
     color: var(--success);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    max-width: 140px;
   }
+  #runnerStatusText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .status-pill.idle {
-    background: rgba(148, 163, 184, 0.12);
     color: var(--text-muted);
-    border-color: var(--border);
   }
   .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
     border-radius: 50%;
     background: currentColor;
   }
@@ -225,112 +240,88 @@ WEB_HTML = r"""<!DOCTYPE html>
   .ip-capsule {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 600;
-    background: var(--purple-soft);
-    color: var(--purple);
-    border: 1px solid rgba(139, 92, 246, 0.28);
+    padding: 4px 6px;
+    border: 0;
+    background: transparent;
+    font-size: 11px;
+    color: var(--text-muted);
     cursor: pointer;
+    max-width: 155px;
   }
+  #topIpCapsuleText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .content-area {
-    padding: 20px 24px;
-    max-width: 1400px;
+    padding: 0;
     width: 100%;
-    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
   }
 
-  /* Summary Cards */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
-    margin-bottom: 18px;
-  }
-  .stat-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 15px 18px;
-  }
-  .stat-label {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-  .stat-val {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-  .stat-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
+  /* One telemetry strip; the queue remains the primary surface. */
+  .telemetry-strip { display: flex; position: relative; align-items: center; gap: 24px; min-height: 36px; padding: 6px 14px 8px; border-bottom: 1px solid var(--border); background: var(--bg-canvas); flex-shrink: 0; }
+  .telemetry-item { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .stat-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .stat-val { font: 600 14px Consolas, monospace; white-space: nowrap; }
+  .telemetry-percent { margin-left: auto; font: 11px Consolas, monospace; color: var(--text-muted); white-space: nowrap; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); }
 
   /* Multi-segment Progress Bar */
   .progress-track {
-    height: 10px;
+    height: 3px;
     background: var(--bg-input);
-    border-radius: 999px;
+    border-radius: 0;
     overflow: hidden;
     display: flex;
-    border: 1px solid var(--border);
-    margin: 10px 0 6px;
+    margin: 6px 0;
   }
+  .telemetry-strip > .progress-track { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; margin: 0; }
   .progress-seg {
     height: 100%;
     transition: width 0.3s ease;
   }
 
-  /* Panels & Cards */
-  .tab-panel { display: none; }
+  /* Continuous workspace sections, separated only by hairlines. */
+  .tab-panel { display: none; min-width: 0; min-height: 0; overflow-y: auto; flex: 1; }
   .tab-panel.active { display: block; }
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-  .card-title {
-    margin: 0 0 6px;
-    font-size: 16.5px;
-    font-weight: 700;
+  #tab-dashboard.active { display: flex; flex-direction: column; overflow: hidden; }
+  .surface-section { padding: 16px; border-bottom: 1px solid var(--border); min-width: 0; }
+  .section-title {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
   }
-  .card-desc {
-    margin: 0 0 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-  }
+  .section-title h2 { font: inherit; margin: 0; }
+  .queue-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--border); }
+  #jobSearchInput { width: 185px; }
   .grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
   .grid-3 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
   }
+  .grid-2 > *, .grid-3 > * { min-width: 0; }
   .field {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    min-width: 0;
   }
   .field label {
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     color: var(--text-secondary);
   }
   .field small {
@@ -344,10 +335,10 @@ WEB_HTML = r"""<!DOCTYPE html>
   textarea {
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 11px;
+    border-radius: 4px;
+    padding: 5px 8px;
     color: var(--text);
-    font-size: 13.5px;
+    font-size: 12px;
     font-family: inherit;
     outline: none;
   }
@@ -363,94 +354,66 @@ WEB_HTML = r"""<!DOCTYPE html>
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 13.5px;
+    font-size: 11px;
     cursor: pointer;
     user-select: none;
   }
 
-  /* Choice Cards (Radio Cards) */
-  .choice-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .choice-card {
-    background: var(--bg-input);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 13px 15px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .choice-card:hover {
-    border-color: var(--text-muted);
-  }
-  .choice-card.selected {
-    border-color: var(--primary);
-    background: var(--primary-soft);
-  }
-  .choice-card h4 {
-    margin: 0 0 4px;
-    font-size: 14px;
-    font-weight: 700;
-  }
-  .choice-card p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  /* Native buttons retain keyboard access and expose selection via aria-pressed. */
+  .segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 5px; background: var(--bg-canvas); max-width: 100%; }
+  .segment { border: 0; border-radius: 3px; background: transparent; color: var(--text-muted); font-size: 11px; padding: 5px 10px; cursor: pointer; }
+  .segment:hover { color: var(--text); }
+  .segment.selected { background: var(--bg-elevated); color: var(--text); box-shadow: 0 1px 3px #0001; }
+  :root[data-theme=light] .segment.selected { background: var(--bg-surface); box-shadow: 0 1px 3px #0002; }
+  .mode-field { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
 
-  /* Pipeline Step Cards (Automa / n8n style) */
+  /* Nine connected accordion rows. */
   .pipeline {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
     position: relative;
   }
   .pipe-step {
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    transition: border-color 0.15s;
-  }
-  .pipe-step:hover {
-    border-color: var(--primary);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    min-width: 0;
   }
   .pipe-head {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    padding: 9px 16px;
   }
+  .pipe-head:hover { background: var(--bg-elevated); }
+  .pipe-head > div { display: flex; align-items: center; min-width: 0; }
+  .pipe-step > .grid-3, .pipe-step > .pipe-body { padding: 8px 16px 12px 54px; }
+  .pipe-body > .grid-3 { margin-top: 12px; }
   .pipe-num {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: var(--primary);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    margin-right: 8px;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font: 11px Consolas, monospace;
+    margin-right: 16px;
   }
   .pipe-title {
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 500;
+    font-size: 12px;
   }
   .pipe-summary {
-    font-family: Consolas, monospace;
-    font-size: 12px;
-    color: var(--primary);
-    background: var(--primary-soft);
-    padding: 2px 8px;
-    border-radius: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
   }
+  .pipe-head::after { content: '−'; color: var(--text-muted); }
+  .collapsed > .pipe-head::after { content: '+'; }
+  .pipe-summary { margin-left: auto; margin-right: 60px; }
+  .regex-tester { padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--border); }
 
   /* Buttons */
   .btn-row {
@@ -460,11 +423,11 @@ WEB_HTML = r"""<!DOCTYPE html>
     align-items: center;
   }
   .btn {
-    padding: 8px 14px;
-    border-radius: 8px;
+    padding: 5px 10px;
+    border-radius: 4px;
     border: 1px solid transparent;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -475,59 +438,66 @@ WEB_HTML = r"""<!DOCTYPE html>
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-warning { background: var(--warning); color: #090d16; }
-  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger { background: transparent; color: var(--danger); }
+  .btn-danger:hover:not(:disabled) { background: var(--danger-soft); }
   .btn-secondary {
-    background: var(--bg-card-hover);
+    background: transparent;
     border-color: var(--border);
     color: var(--text);
   }
-  .btn-secondary:hover:not(:disabled) { border-color: var(--text-muted); }
-  .btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 6px; }
+  .btn-secondary:hover:not(:disabled), .btn-ghost:hover:not(:disabled) { background: var(--bg-elevated); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-sm { padding: 3px 7px; font-size: 11px; }
+  .topbar .btn { padding: 4px 7px; }
 
-  /* Filter Pills */
+  /* Flat filter tabs */
   .filter-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 2px;
   }
   .filter-pill {
-    padding: 5px 11px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg-input);
+    padding: 5px 8px;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
     color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
   }
   .filter-pill.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
+    box-shadow: inset 0 -2px var(--primary);
+    color: var(--text);
   }
 
   /* Tables */
   .table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    overflow: auto;
+    min-width: 0;
+    max-width: 100%;
   }
+  .jobs-table-wrap { flex: 1; min-height: 0; }
+  .jobs-table-wrap table { min-width: 1160px; }
+  #jobsPagination { min-height: 30px; padding: 4px 12px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
   }
   th, td {
-    padding: 10px 12px;
+    padding: 7px 10px;
     text-align: left;
     border-bottom: 1px solid var(--border);
   }
   th {
-    background: var(--bg-input);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-surface);
     color: var(--text-muted);
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     white-space: nowrap;
   }
   tr:hover td {
@@ -536,8 +506,8 @@ WEB_HTML = r"""<!DOCTYPE html>
   .badge {
     display: inline-block;
     padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11.5px;
+    border-radius: 3px;
+    font-size: 10px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -547,17 +517,17 @@ WEB_HTML = r"""<!DOCTYPE html>
   .badge-danger { background: var(--danger-soft); color: var(--danger); }
   .badge-muted { background: rgba(148, 163, 184, 0.16); color: var(--text-secondary); }
 
-  .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; }
   .copy-chip {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     padding: 2px 7px;
-    border-radius: 5px;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg-elevated);
+    border: 0;
     cursor: pointer;
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--text-secondary);
   }
   .copy-chip:hover { border-color: var(--primary); color: var(--primary); }
@@ -565,19 +535,19 @@ WEB_HTML = r"""<!DOCTYPE html>
   /* Floating Bulk Action Bar */
   .floating-bulk-bar {
     position: fixed;
-    bottom: 20px;
-    left: calc(50% + 115px);
+    bottom: calc(var(--terminal-height) + 12px);
+    left: calc(50% + var(--sidebar-width) / 2);
     transform: translateX(-50%);
     background: var(--bg-sidebar);
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    padding: 10px 18px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
     box-shadow: var(--shadow);
     z-index: 500;
     display: none;
     align-items: center;
-    gap: 12px;
-    width: min(1100px, calc(100% - 270px));
+    gap: 8px;
+    width: min(1040px, calc(100% - var(--sidebar-width) - 24px));
     flex-wrap: wrap;
   }
   .floating-bulk-bar > span { white-space: nowrap; flex-shrink: 0; }
@@ -597,17 +567,19 @@ WEB_HTML = r"""<!DOCTYPE html>
     bottom: 0;
     width: 460px;
     max-width: 92vw;
-    background: var(--bg-sidebar);
+    background: var(--bg-surface);
     border-left: 1px solid var(--border);
     box-shadow: var(--shadow);
     z-index: 810;
     padding: 20px;
     overflow-y: auto;
     transform: translateX(100%);
+    visibility: hidden;
     transition: transform 0.22s ease;
   }
   .drawer.open {
     transform: translateX(0);
+    visibility: visible;
   }
   .timeline-item {
     position: relative;
@@ -627,85 +599,141 @@ WEB_HTML = r"""<!DOCTYPE html>
   }
 
   .step-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 8px;
+    background: var(--bg-elevated);
+    padding: 8px;
+    margin-top: 6px;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     align-items: center;
   }
-  @media (max-width: 980px) {
-    .sidebar { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-    body { flex-direction: column; }
-    .main-shell { margin-left: 0; }
-    .floating-bulk-bar { left: 50%; width: calc(100% - 24px); }
-    .step-box { grid-template-columns: 1fr; }
-  }
+  /* The terminal docks outside the scrollable views, collapsed by default. */
+  .terminal-dock { --danger: #f87171; --warning: #fbbf24; --success: #34d399; position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; z-index: 110; color-scheme: dark; background: var(--bg-terminal); color: #aeb7ca; border-top: 1px solid #ffffff12; }
+  .terminal-toggle { display: flex; gap: 10px; align-items: center; width: 100%; height: 33px; padding: 0 14px; background: transparent; border: 0; color: inherit; cursor: pointer; text-align: left; font-size: 11px; }
+  .terminal-toggle::before { content: '>_'; color: #6f7e99; font-family: Consolas, monospace; }
+  .terminal-toggle::after { content: '展开 ↑'; margin-left: auto; color: #6f7e99; font-size: 10px; }
+  .terminal-toggle[aria-expanded=true]::after { content: '收起 ↓'; }
+  .terminal-body { padding: 0 14px 12px; height: 232px; display: flex; flex-direction: column; }
+  .terminal-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #ffffff12; padding: 8px 0; }
+  .terminal-toolbar .btn { color: #aeb7ca; }
+  #runnerSlots { margin-right: auto; overflow-wrap: anywhere; }
   .log-box {
-    background: #060911;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 11px;
+    background: var(--bg-terminal);
+    padding: 6px 0;
     font-family: Consolas, monospace;
     font-size: 12px;
-    max-height: 170px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     color: #93c5fd;
     white-space: pre-wrap;
-  }
-  .callout {
-    background: var(--primary-soft);
-    border-left: 4px solid var(--primary);
-    padding: 11px 15px;
-    border-radius: 6px;
-    font-size: 13px;
-    margin-bottom: 16px;
+    overflow-wrap: anywhere;
   }
   .toast {
     position: fixed;
     top: 20px;
     right: 24px;
     padding: 11px 18px;
-    border-radius: 10px;
+    border-radius: 6px;
     background: var(--bg-sidebar);
     border: 1px solid var(--primary);
     color: var(--text);
-    font-size: 13.5px;
+    font-size: 12px;
     font-weight: 600;
     box-shadow: var(--shadow);
     z-index: 9999;
     display: none;
   }
   input, select, textarea { min-width: 0; max-width: 100%; }
+  input[type=checkbox] { accent-color: var(--primary); margin: 0; flex-shrink: 0; }
   button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
   .pipe-head { cursor: pointer; }
   .pipe-step.collapsed > :not(.pipe-head) { display: none; }
   .pipe-step.collapsed .pipe-head { margin-bottom: 0; }
-  .pipe-step + .insert-zone { margin: 0 0 10px 14px; padding-left: 16px; border-left: 2px solid var(--primary); }
-  .smart-selector-control { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
-  .smart-selector-control input { flex: 1; }
+  .pipe-step + .insert-zone { position: relative; min-width: 0; }
+  .pipe-step + .insert-zone:has(.step-box) { padding: 0 16px 8px 54px; }
+  .insert-zone > .btn { position: absolute; right: 42px; top: -32px; padding: 3px 6px; font-size: 10px; color: var(--text-muted); }
+  .smart-selector-control { display: flex; flex-wrap: wrap; gap: 5px; }
+  .smart-selector-control select { flex: 1; font-size: 11px; }
+  .smart-selector-control input { flex: 1; min-width: 100px; }
   .log-error { color: var(--danger); } .log-warn { color: var(--warning); }
   .log-success { color: var(--success); }
-  .drop-zone { padding: 16px; background: var(--primary-soft); border-radius: 10px; margin-bottom: 12px; }
+  .drop-zone { background: var(--bg-elevated); border-radius: 4px; padding: 8px; }
+  .drop-zone textarea { display: block; width: 100%; border: 0; background: transparent; padding: 4px; }
+  .drop-label { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 6px; font-size: 11px; color: var(--text-muted); }
   .drop-zone.dragging { outline: 2px dashed var(--primary); }
   .secret-cell { max-width: 210px; word-break: break-all; }
   .selected-row { background: var(--primary-soft); }
   .step-box.disabled-step { opacity: .55; }
   .step-box input[type=text], .step-box select { width: 100%; }
   .running-badge { color: var(--primary); font-size: 11px; }
+  .proxy-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .proxy-identity { min-width: 0; flex: 1; }
+  #activeProxyNodeTitle { font-weight: 600; overflow-wrap: anywhere; }
+  #activeProxyServerSub { font-size: 10px; color: var(--text-muted); overflow-wrap: anywhere; }
+  .proxy-progress { flex: 1; min-width: 150px; font-size: 10px; color: var(--text-muted); }
+  .proxy-columns { gap: 0; }
+  .proxy-columns > :first-child { border-right: 1px solid var(--border); }
+  .security-note { color: var(--text-muted); font-size: 11px; margin: 12px 0 0; }
+  #backupResult, #regexTestResult { overflow-wrap: anywhere; }
+  @media (max-width: 1250px) and (min-width: 1101px) {
+    .topbar-right { width: 100%; justify-content: flex-end; }
+  }
+  @media (max-width: 1100px) {
+    :root { --sidebar-width: 0px; }
+    body { flex-direction: column; }
+    .sidebar { position: static; width: 100%; flex-shrink: 0; padding: 6px 10px 0; border-right: 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto; }
+    .brand { padding: 0 0 6px; gap: 8px; }
+    .brand-sub, #configPathText { display: none; }
+    .brand-logo { width: 22px; height: 22px; font-size: 13px; }
+    .brand-title { font-size: 12px; }
+    .sidebar-footer { grid-column: 2; grid-row: 1; border: 0; padding: 0 0 6px; }
+    .nav-list { grid-column: 1 / -1; flex-direction: row; overflow-x: auto; min-width: 0; gap: 2px; }
+    .nav-item { padding: 7px 10px; flex-shrink: 0; border-radius: 0; }
+    .nav-item.active { box-shadow: inset 0 -2px var(--primary); }
+    .main-shell { height: auto; flex: 1; min-height: 0; }
+    .telemetry-strip { gap: 18px; }
+    .floating-bulk-bar { left: 50%; width: calc(100% - 24px); }
+  }
   @media (max-width: 650px) {
-    .grid-2, .grid-3, .choice-grid { grid-template-columns: minmax(0, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
     .grid-2 > *, .grid-3 > * { grid-column: auto !important; min-width: 0; }
-    .content-area { padding: 14px 12px; } .topbar { padding: 12px; }
-    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stat-card { padding: 12px; } .stat-val { font-size: 23px; }
-    .floating-bulk-bar { flex-wrap: wrap; width: calc(100% - 24px); bottom: 8px; gap: 8px; padding: 12px; }
+    .topbar { padding: 6px 8px; gap: 6px; }
+    .topbar-left, .topbar-right { width: 100%; flex: auto; }
+    .topbar-right { justify-content: flex-end; }
+    .ip-capsule { margin-right: auto; max-width: 210px; }
+    .topbar-left .status-pill { max-width: 105px; }
+    #batchSelect { flex: 1 1 145px; width: 145px; }
+    .telemetry-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px 10px 8px; gap: 4px; }
+    .telemetry-item { flex-direction: column; gap: 0; }
+    .stat-label { font-size: 10px; }
+    .stat-val { font-size: 12px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .telemetry-percent, .pipe-summary { display: none; }
+    .queue-toolbar { padding: 6px 8px; }
+    .queue-toolbar > .btn-row { width: 100%; justify-content: space-between; }
+    #jobSearchInput { width: 190px; }
+    .filter-pill { padding: 4px 7px; font-size: 10px; }
+    .surface-section { padding: 12px; }
+    .section-title { align-items: flex-start; }
+    .segment { padding: 5px 8px; }
+    .pipe-head { padding: 9px 12px; }
+    .pipe-num { margin-right: 8px; }
+    .pipe-step > .grid-3, .pipe-step > .pipe-body { padding: 6px 12px 12px; }
+    .pipe-step + .insert-zone:has(.step-box) { padding-left: 12px; }
+    .step-box { grid-template-columns: 1fr; }
+    .proxy-columns > :first-child { border-right: 0; }
+    .proxy-status { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .proxy-progress { min-width: 0; }
+    .proxy-status > .btn-row { justify-content: flex-end; }
+    .floating-bulk-bar { max-height: 40dvh; overflow-y: auto; gap: 6px; padding: 8px; }
     .toast { left: 12px; right: 12px; top: 12px; }
-    .card { padding: 14px; } .drawer { max-width: 100vw; }
-    .topbar-left, .topbar-right { width: 100%; } .ip-capsule { max-width: 100%; overflow-wrap: anywhere; }
+    .drawer { max-width: 100vw; padding: 14px; }
+    .terminal-body { height: 260px; }
+    .terminal-toolbar { gap: 8px; }
+    #runnerSlots { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
@@ -717,37 +745,35 @@ WEB_HTML = r"""<!DOCTYPE html>
     <div class="brand-logo">A</div>
     <div>
       <div class="brand-title">Agnes 工作台</div>
-      <div class="brand-sub">可视化流程 · 导号 · 代理池</div>
+      <div class="brand-sub">LOCAL WORKBENCH</div>
     </div>
   </div>
 
-  <div class="nav-list">
+  <nav class="nav-list" aria-label="工作台导航">
     <button class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard', this)">
-      <span>🚀 任务监控大盘</span>
+      <span>任务队列</span>
       <span class="nav-badge" id="navBadgeTotal">0</span>
     </button>
     <button class="nav-item" id="nav-import" onclick="switchTab('import', this)">
-      <span>📥 账号导入与核验</span>
-      <span class="nav-badge">预览向导</span>
+      <span>账号导入</span>
     </button>
     <button class="nav-item" id="nav-flows" onclick="switchTab('flows', this)">
-      <span>⛓️ 可视化流程编排</span>
-      <span class="nav-badge">步骤流</span>
+      <span>流程编排</span>
     </button>
     <button class="nav-item" id="nav-proxies" onclick="switchTab('proxies', this)">
-      <span>🌐 代理池与换IP策略</span>
+      <span>代理池</span>
       <span class="nav-badge" id="navBadgeProxies">0</span>
     </button>
     <button class="nav-item" id="nav-delivery" onclick="switchTab('delivery', this)">
-      <span>📦 交付导出与备份</span><span class="nav-badge">本地</span>
+      <span>导出与备份</span>
     </button>
-  </div>
+  </nav>
 
   <div class="sidebar-footer">
     <div id="configPathText" style="word-break: break-all;">正在加载配置...</div>
     <div class="btn-row" style="justify-content: space-between;">
-      <button class="btn btn-secondary btn-sm" onclick="toggleTheme()">🌓 切换深浅主题</button>
-      <button class="btn btn-secondary btn-sm" onclick="refreshAll()">🔄 刷新</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" aria-label="🌓 切换深浅主题">切换主题</button>
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">刷新</button>
     </div>
   </div>
 </aside>
@@ -761,111 +787,76 @@ WEB_HTML = r"""<!DOCTYPE html>
         <span class="status-dot"></span>
         <span id="runnerStatusText">空闲待命</span>
       </div>
-      <select id="batchSelect" aria-label="当前批次" onchange="onBatchChange()" style="min-width: 190px; font-weight: 600;"></select>
-      <input type="number" id="runLimitInput" placeholder="执行数量(留空=全部)" min="1" style="width: 155px;" />
-      <button class="btn btn-success" onclick="controlBatch('run')">▶ 开始/继续注册</button>
-      <button class="btn btn-primary" onclick="controlBatch('verify_batch')">🔐 批量验登录&拿结果</button>
-       <button class="btn btn-warning btn-sm" onclick="controlBatch('pause')">⏸ 暂停</button>
-       <button class="btn btn-secondary btn-sm" onclick="controlBatch('resume')">▷ 恢复</button>
-      <button class="btn btn-danger btn-sm" onclick="controlBatch('stop')">⏹ 停止</button>
-      <button class="btn btn-secondary btn-sm" onclick="controlBatch('recover')">🛠 恢复中断</button>
+      <select id="batchSelect" aria-label="当前批次" onchange="onBatchChange()"></select>
+      <input type="number" id="runLimitInput" aria-label="执行数量" placeholder="全部" title="执行数量，留空为全部" min="1" />
+      <button class="btn btn-primary" onclick="controlBatch('run')" aria-label="▶ 开始/继续注册">开始执行</button>
+      <button class="btn btn-secondary" onclick="controlBatch('verify_batch')" aria-label="🔐 批量验登录&拿结果">批量核验</button>
+      <button class="btn btn-ghost btn-sm" onclick="controlBatch('pause')">暂停</button>
+      <button class="btn btn-ghost btn-sm" onclick="controlBatch('resume')">恢复</button>
+      <button class="btn btn-danger btn-sm" onclick="controlBatch('stop')">停止</button>
+      <button class="btn btn-ghost btn-sm" onclick="controlBatch('recover')">恢复中断</button>
     </div>
     <div class="topbar-right">
-      <div class="ip-capsule" onclick="switchTab('proxies', document.getElementById('nav-proxies'))" title="点击进入代理池与自动换IP面板">
-        <span>🌐</span>
+      <button class="ip-capsule" onclick="switchTab('proxies', document.getElementById('nav-proxies'))" title="代理池与换 IP 策略">
         <span id="topIpCapsuleText">代理池: 未启用</span>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="exportData('xlsx')">📥 导出 Excel</button>
-      <button class="btn btn-secondary btn-sm" onclick="exportData('csv')">📄 导出 CSV</button>
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="exportData('xlsx')" aria-label="📥 导出 Excel">Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportData('csv')" aria-label="📄 导出 CSV">CSV</button>
     </div>
   </header>
 
-  <main class="content-area">
-    <!-- Top Summary Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">总任务账号数</div>
-        <div class="stat-val" id="statTotal">0</div>
-        <div class="stat-sub" id="statBatchCount">共 0 个批次</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">已达成目标结果 (含Key/已激活)</div>
-        <div class="stat-val" style="color: var(--success)" id="statSucceeded">0</div>
-        <div class="stat-sub" id="statWithKey">其中已提取最终结果: 0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">等待执行 / 正在运行</div>
-        <div class="stat-val" style="color: var(--primary)" id="statPending">0</div>
-        <div class="stat-sub" id="statRunning">正在运行: 0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">待登录验证 / 需人工处理</div>
-        <div class="stat-val" style="color: var(--warning)" id="statReview">0</div>
-        <div class="stat-sub" id="statFailed">失败/跳过: 0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">代理池 & 自动换 IP 进度</div>
-        <div class="stat-val" style="color: var(--purple); font-size: 19px;" id="statProxySummary">直连模式</div>
-        <div class="stat-sub" id="statProxyRotation">每达成 1 次结果换 IP</div>
-      </div>
+  <section id="telemetryStrip" class="telemetry-strip" aria-label="任务指标">
+    <div class="telemetry-item"><span class="stat-label">总计</span><span class="stat-val" id="statTotal">0</span><span class="sr-only" id="statBatchCount">共 0 个批次</span></div>
+    <div class="telemetry-item"><span class="stat-label">已拿结果</span><span class="stat-val" style="color:var(--success)" id="statSucceeded">0</span><span class="sr-only" id="statWithKey"></span></div>
+    <div class="telemetry-item"><span class="stat-label">运行中</span><span class="stat-val" id="statRunning">0</span><span class="sr-only" id="statPending">待执行 0</span></div>
+    <div class="telemetry-item"><span class="stat-label">待核验</span><span class="stat-val" id="statReview">0</span><span class="sr-only" id="statFailed"></span></div>
+    <div class="telemetry-item"><span class="stat-label">代理池</span><span class="stat-val" id="statProxySummary">直连</span><span class="sr-only" id="statProxyRotation"></span></div>
+    <span class="telemetry-percent" id="progressPercentText">完成率 0%</span>
+    <div class="progress-track" aria-label="任务状态分布">
+      <div class="progress-seg" id="progSuccess" style="width:0%;background:var(--success)" title="已完成"></div>
+      <div class="progress-seg" id="progNoKey" style="width:0%;background:var(--purple)" title="已登录待拿结果"></div>
+      <div class="progress-seg" id="progRunning" style="width:0%;background:var(--primary)" title="正在运行"></div>
+      <div class="progress-seg" id="progReview" style="width:0%;background:var(--warning)" title="待核验"></div>
+      <div class="progress-seg" id="progFailed" style="width:0%;background:var(--danger)" title="失败或跳过"></div>
+      <div class="progress-seg" id="progPending" style="width:0%;background:var(--text-muted)" title="待执行"></div>
     </div>
+  </section>
+
+  <main class="content-area">
 
     <!-- ==================== TAB 1: DASHBOARD & DATA TABLE (ISS-001) ==================== -->
     <div id="tab-dashboard" class="tab-panel active">
-      <div class="card">
-        <div class="card-title">
-          <span>实时执行进度与运行终端</span>
-          <span style="font-size: 12px; color: var(--text-muted);" id="progressPercentText">完成率 0%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-seg" id="progSuccess" style="width: 0%; background: var(--success);" title="已完成"></div>
-          <div class="progress-seg" id="progNoKey" style="width: 0%; background: var(--purple);" title="已登录待拿结果"></div>
-          <div class="progress-seg" id="progRunning" style="width: 0%; background: var(--primary);" title="正在运行"></div>
-          <div class="progress-seg" id="progReview" style="width: 0%; background: var(--warning);" title="待验证/待核查"></div>
-          <div class="progress-seg" id="progFailed" style="width: 0%; background: var(--danger);" title="失败/跳过"></div>
-          <div class="progress-seg" id="progPending" style="width: 0%; background: var(--text-muted);" title="待处理"></div>
-        </div>
-        <div id="runnerSlots" class="mono" style="margin:8px 0;color:var(--text-muted)"></div>
-        <div class="btn-row">
-          <label class="checkbox-row"><input id="logAutoScroll" type="checkbox" checked />自动滚动</label>
-          <button class="btn btn-secondary btn-sm" onclick="clearLogs()">清空当前日志视图</button>
-          <span class="stat-sub">绿：完成 · 紫：已登录待拿结果 · 蓝：运行 · 黄：待核验 · 红：异常 · 灰：待处理</span>
-        </div>
-        <div class="log-box" id="runnerLogsBox" style="margin-top: 10px;">等待任务启动...</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <div class="filter-pills" id="stateFilterPills">
+        <div class="queue-toolbar">
+          <div class="filter-pills" id="stateFilterPills" role="group" aria-label="任务状态筛选">
             <button class="filter-pill active" onclick="setStateFilter('', this)">全部</button>
-            <button class="filter-pill" onclick="setStateFilter('SUCCEEDED', this)">✅ 已完成</button>
-            <button class="filter-pill" onclick="setStateFilter('PENDING', this)">⏳ 等待执行</button>
-            <button class="filter-pill" onclick="setStateFilter('PENDING_VERIFY', this)">🔐 待登录验证</button>
-            <button class="filter-pill" onclick="setStateFilter('NEEDS_REVIEW', this)">⚠️ 需人工处理</button>
-            <button class="filter-pill" onclick="setStateFilter('UNKNOWN', this)">❓ 结果待核查</button>
-            <button class="filter-pill" onclick="setStateFilter('FAILED', this)">❌ 失败</button>
+            <button class="filter-pill" onclick="setStateFilter('SUCCEEDED', this)">已完成</button>
+            <button class="filter-pill" onclick="setStateFilter('PENDING', this)">待执行</button>
+            <button class="filter-pill" onclick="setStateFilter('PENDING_VERIFY', this)">待核验</button>
+            <button class="filter-pill" onclick="setStateFilter('NEEDS_REVIEW', this)">人工处理</button>
+            <button class="filter-pill" onclick="setStateFilter('UNKNOWN', this)">待核查</button>
+            <button class="filter-pill" onclick="setStateFilter('FAILED', this)">失败</button>
           </div>
           <div class="btn-row">
-            <label class="checkbox-row" style="font-size: 12.5px;">
+            <label class="checkbox-row">
               <input type="checkbox" id="revealSecretsToggle" onchange="onRevealChange()" />
-              显示明文密码与提取结果
+              显示明文
             </label>
-              <input type="text" id="jobSearchInput" aria-label="搜索任务" placeholder="🔍 搜索邮箱 / 用户ID / 错误码..." oninput="onJobSearch()" style="width: 220px;" />
+              <input type="text" id="jobSearchInput" aria-label="搜索任务" placeholder="搜索邮箱、用户或错误码" oninput="onJobSearch()" />
           </div>
         </div>
 
-        <div class="table-wrap" style="margin-top: 12px;">
-          <table>
+        <div class="table-wrap jobs-table-wrap" tabindex="0" role="region" aria-label="任务数据表">
+          <table aria-label="任务队列">
             <thead>
               <tr>
-                <th style="width:36px;"><input type="checkbox" id="selectAllJobs" onchange="toggleSelectAllJobs(this)" /></th>
-                <th>邮箱账号 (点击复制)</th>
+                <th style="width:36px;"><input type="checkbox" id="selectAllJobs" aria-label="选择当前页全部任务" onchange="toggleSelectAllJobs(this)" /></th>
+                <th>邮箱账号</th>
                 <th>状态</th>
                 <th>执行阶段</th>
-                <th>平台登录密码</th>
-                <th>最终提取结果 (API Key / Token)</th>
+                <th>登录密码</th>
+                <th>提取结果</th>
                 <th>代理节点</th>
-                <th>状态说明 / 错误码</th>
+                <th>状态说明</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -874,43 +865,34 @@ WEB_HTML = r"""<!DOCTYPE html>
             </tbody>
           </table>
         </div>
-      </div>
     </div>
 
     <!-- ==================== TAB 2: SMART IMPORT WIZARD & VERIFY (ISS-003) ==================== -->
     <div id="tab-import" class="tab-panel">
-      <div class="callout">
-        💡 <b>实时分列预览向导：</b>把账号粘贴到下方（或拖入 <code>.txt/.csv</code> 文件），底下会<b>立刻实时显示分列预览结果</b>，哪一列是邮箱、哪一列是密码、哪一行格式写错了当场标红！确认无误后点导入即可。
-      </div>
-
-      <div class="card">
-        <h3 class="card-title">第一步：选择这批账号要执行的任务模式</h3>
-        <div class="choice-grid">
-          <div class="choice-card selected" id="modeCardRegister" onclick="selectImportMode('register')">
-            <h4>🆕 模式 A：新账号批量注册</h4>
-            <p>按设定的「注册流程 ➔ 接收验证码 ➔ 提取最终结果」完整走完新开户流程。</p>
-          </div>
-          <div class="choice-card" id="modeCardExisting" onclick="selectImportMode('existing_login')">
-            <h4>🔐 模式 B：已有平台账号（直接验证登录 & 拿结果）</h4>
-            <p>跳过注册！直接用导入的账号密码登录平台，验证账号是否有效并把 API Key / 目标结果提出来。</p>
+      <section class="surface-section">
+        <div class="section-title">
+          <h2>账号导入</h2>
+          <div class="segmented" role="group" aria-label="导入任务模式">
+            <button class="segment selected" id="modeCardRegister" aria-pressed="true" onclick="selectImportMode('register')">新账号注册</button>
+            <button class="segment" id="modeCardExisting" aria-pressed="false" onclick="selectImportMode('existing_login')">已有账号验号</button>
           </div>
         </div>
         <input type="hidden" id="importMode" value="register" />
 
         <div class="grid-3">
           <div class="field">
-            <label>账号数据格式</label>
+            <label for="importFormat">数据格式</label>
             <select id="importFormat" onchange="updateImportPreview()">
-              <option value="auto">✨ 自动识别格式（支持 1~5 段及 CSV）</option>
-              <option value="four_part">四段式：邮箱----邮箱密码----ClientID----RefreshToken</option>
-              <option value="three_part">三段式：邮箱----邮箱密码----平台登录密码</option>
-              <option value="two_part">两段式：邮箱----密码</option>
-              <option value="email_only">单列纯邮箱（自动生成强密码）</option>
-              <option value="csv">标准 CSV 格式</option>
+              <option value="auto">自动识别（1～5 段 / CSV）</option>
+              <option value="four_part">四段式 OAuth</option>
+              <option value="three_part">三段式双密码</option>
+              <option value="two_part">两段式账密</option>
+              <option value="email_only">纯邮箱</option>
+              <option value="csv">CSV</option>
             </select>
           </div>
           <div class="field">
-            <label>字段分隔符</label>
+            <label for="importDelimiter">分隔符</label>
             <select id="importDelimiter" onchange="updateImportPreview()">
               <option value="auto">自动检测 (---- / : / , / | / Tab)</option>
               <option value="----">四横线 (----)</option>
@@ -921,41 +903,40 @@ WEB_HTML = r"""<!DOCTYPE html>
             </select>
           </div>
           <div class="field">
-            <label>两段式“邮箱----密码”中密码用途</label>
+            <label for="importPasswordRole">两段式密码用途</label>
             <select id="importPasswordRole" onchange="updateImportPreview()">
-              <option value="both">同时作为邮箱密码 & 平台登录密码</option>
-              <option value="agnes_only">仅作为平台登录密码（已有账号验号常用）</option>
-              <option value="mailbox_only">仅作为邮箱密码（平台密码自动生成）</option>
+              <option value="both">邮箱与平台通用</option>
+              <option value="agnes_only">仅平台登录</option>
+              <option value="mailbox_only">仅邮箱收信</option>
             </select>
           </div>
           <div class="field">
-            <label>自动加入批次名称</label>
+            <label for="importBatchId">批次名称</label>
             <input type="text" id="importBatchId" value="batch-main" placeholder="例如：batch-main" />
           </div>
           <div class="field">
-            <label>邮箱自动收码协议</label>
+            <label for="importMailboxTransport">收码协议</label>
             <select id="importMailboxTransport">
-              <option value="graph">Microsoft Graph API（四段式推荐）</option>
+              <option value="graph">Microsoft Graph</option>
               <option value="imap">Outlook IMAP XOAUTH2</option>
-              <option value="imap_password">标准 IMAP 账号密码登录</option>
+              <option value="imap_password">IMAP 账密</option>
             </select>
           </div>
           <div class="field">
-            <label>选择本地文件导入 (.txt / .csv)</label>
+            <label for="importFilePicker">本地文件</label>
             <input type="file" id="importFilePicker" accept=".txt,.csv" onchange="loadImportFile(this)" />
           </div>
         </div>
 
-        <div class="field">
-          <label>粘贴账号数据（每行一条，支持实时分列预览）</label>
-          <div id="importDropZone" class="drop-zone">拖入 .txt / .csv 文件到这里，或在下方粘贴。文件仅在本机解析。</div>
-          <textarea id="importAccountsText" aria-label="账号导入内容" rows="6" oninput="updateImportPreview()" placeholder="在此粘贴账号，下方将实时生成分列预览表：&#10;user1@example.com----MailPass123----client-id-xxx----example-refresh-token&#10;user2@example.com----MyPlatformPass123&#10;user3@example.com"></textarea>
+        <div id="importDropZone" class="drop-zone">
+          <div class="drop-label"><label for="importAccountsText">账号数据</label><span>粘贴或拖入 TXT / CSV · 仅本机解析</span></div>
+          <textarea id="importAccountsText" aria-label="账号导入内容" rows="4" oninput="updateImportPreview()" placeholder="每行一条账号&#10;user@example.com----password&#10;user@example.com----mail-password----client-id----refresh-token"></textarea>
         </div>
 
         <!-- Live Parse Preview Table (ISS-003) -->
         <div style="margin: 12px 0;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:13px; font-weight:700;">🔍 实时分列解析预览（导入前自动校验）</span>
+            <span style="font-size:12px; font-weight:600;">解析预览</span>
             <span id="importPreviewSummary" class="badge badge-muted">等待输入数据...</span>
           </div>
           <div class="table-wrap" style="max-height: 220px; overflow-y: auto;">
@@ -972,441 +953,237 @@ WEB_HTML = r"""<!DOCTYPE html>
                 </tr>
               </thead>
               <tbody id="importPreviewBody">
-                <tr><td colspan="8" style="text-align:center; color:var(--text-muted);">在上方粘贴账号后，此处将实时展示每一行的分列结果</td></tr>
+                <tr><td colspan="8" style="text-align:center; color:var(--text-muted);">暂无数据</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <div class="btn-row">
-          <button class="btn btn-primary" id="importSubmit" onclick="submitImportAccounts()">🚀 确认无误，立即批量导入账号</button>
+          <button class="btn btn-primary" id="importSubmit" onclick="submitImportAccounts()" aria-label="🚀 确认无误，立即批量导入账号">导入账号</button>
           <span id="importResultBox" style="font-size: 13px; color: var(--success); font-weight: 600;"></span>
         </div>
-      </div>
+      </section>
 
-      <!-- Verification Mode Cards (ISS-003) -->
-      <div class="card">
-        <h3 class="card-title">第二步：设置验证码获取方式 & 登录成功核验标准</h3>
-        <p class="card-desc">选择注册时如何获取邮箱验证码，以及验证账号登录时如何判断登录成功。</p>
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:8px;">📬 注册验证码获取模式 (`verification.mode`)</label>
-        <div class="choice-grid">
-          <div class="choice-card selected" id="vCardAuto" onclick="selectVerifyMode('auto_mailbox')">
-            <h4>📬 自动从邮箱读取验证码</h4>
-            <p>通过 Microsoft Graph 或 IMAP 自动连接收件箱/垃圾箱提取验证码。</p>
-          </div>
-          <div class="choice-card" id="vCardManual" onclick="selectVerifyMode('manual')">
-            <h4>👀 弹出浏览器人工输入</h4>
-            <p>自动打开可见浏览器窗口，停在验证码框等待你手动输入 6 位验证码。</p>
-          </div>
-          <div class="choice-card" id="vCardNone" onclick="selectVerifyMode('none')">
-            <h4>⚡ 无需邮箱验证码</h4>
-            <p>目标注册页不需要邮箱验证码，填完账号密码后直接点击提交按钮。</p>
+      <section class="surface-section">
+        <div class="section-title"><h2>验证设置</h2><button class="btn btn-primary" onclick="saveAllConfig()" aria-label="💾 保存验证设置">保存设置</button></div>
+        <div class="mode-field"><span class="stat-label">验证码</span>
+          <div class="segmented" role="group" aria-label="验证码获取模式">
+            <button class="segment selected" id="vCardAuto" aria-pressed="true" onclick="selectVerifyMode('auto_mailbox')">自动收码</button>
+            <button class="segment" id="vCardManual" aria-pressed="false" onclick="selectVerifyMode('manual')">人工输入</button>
+            <button class="segment" id="vCardNone" aria-pressed="false" onclick="selectVerifyMode('none')">无需验证码</button>
           </div>
         </div>
         <input type="hidden" id="cfgVerifyMode" value="auto_mailbox" />
-        <div class="field"><label>账号登录成功核验标准</label><select id="importLoginVerifyMode" onchange="selectLoginVerifyMode(this.value)"><option value="strict_identity">严格匹配页面邮箱 + 已登录标志（推荐）</option><option value="selector_only">仅检查已登录元素</option><option value="url_or_token">跳出登录页与 LocalStorage Token</option></select><small>与流程编排中的登录核验设置同步保存。</small></div>
+        <div class="mode-field"><span class="stat-label">登录核验</span>
+          <div class="segmented" role="group" aria-label="导入登录核验标准">
+            <button class="segment selected" id="iLoginStrict" aria-pressed="true" onclick="selectLoginVerifyMode('strict_identity')">严格身份</button>
+            <button class="segment" id="iLoginSelector" aria-pressed="false" onclick="selectLoginVerifyMode('selector_only')">已登录元素</button>
+            <button class="segment" id="iLoginToken" aria-pressed="false" onclick="selectLoginVerifyMode('url_or_token')">跳转与令牌</button>
+          </div>
+        </div>
+        <select id="importLoginVerifyMode" aria-label="账号登录成功核验标准" onchange="selectLoginVerifyMode(this.value)" hidden><option value="strict_identity">严格身份</option><option value="selector_only">已登录元素</option><option value="url_or_token">跳转与令牌</option></select>
 
         <div class="grid-3">
           <div class="field">
-            <label>验证码发件人域名过滤 (`sender_domain`)</label>
+            <label for="cfgSenderDomain">发件域名</label>
             <input type="text" id="cfgSenderDomain" placeholder="agnes-ai.com (填 * 不限域名)" />
           </div>
           <div class="field">
-            <label>验证码提取正则 (`code_pattern`)</label>
+            <label for="cfgCodePattern">验证码正则</label>
             <input type="text" id="cfgCodePattern" class="mono" placeholder="(?<!\d)\d{6}(?!\d)" />
           </div>
           <div class="field">
-            <label>IMAP 服务器 / 等待超时(秒)</label>
+            <label for="cfgImapHost">IMAP 服务器 / 超时（秒）</label>
             <div style="display:flex; gap:6px;">
               <input type="text" id="cfgImapHost" placeholder="outlook.office365.com" style="flex:1;" />
-              <input type="number" id="cfgVerifyTimeout" min="5" max="900" style="width:85px;" title="验证码超时秒数" />
+              <input type="number" id="cfgVerifyTimeout" aria-label="验证码超时秒数" min="5" max="900" style="width:65px;" />
             </div>
           </div>
         </div>
 
-        <button class="btn btn-primary" onclick="saveAllConfig()">💾 保存验证设置</button>
-      </div>
+      </section>
     </div>
 
     <!-- ==================== TAB 3: VISUAL FLOW BUILDER (ISS-002) ==================== -->
     <div id="tab-flows" class="tab-panel">
-      <div class="callout">
-        💡 <b>可视化步骤流编排器（参考 Automa / n8n）：</b>整个流程按执行先后顺序排列成步骤卡片。你可以用<b>「定位助手」</b>（按按钮文字 / 按输入框提示词）自动生成选择器，在任意阶段点 <b>「+ 插入自定义步骤」</b> 并上下调整顺序，还能在最下方<b>实时测试结果正则表达式</b>！
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <span>🌐 全局运行参数 & 目标网站设置</span>
+      <section class="surface-section">
+        <div class="section-title">
+          <h2>流程编排</h2>
           <div class="btn-row">
-            <button class="btn btn-secondary btn-sm" onclick="resetFlowDefaults()">🔄 一键恢复 Agnes 官方默认流程</button>
-            <button class="btn btn-primary btn-sm" onclick="saveAllConfig()">💾 保存全部流程修改</button>
+            <button class="btn btn-ghost btn-sm" onclick="resetFlowDefaults()" aria-label="🔄 一键恢复 Agnes 官方默认流程">恢复默认</button>
+            <button class="btn btn-primary btn-sm" onclick="saveAllConfig()" aria-label="💾 保存全部流程修改">保存配置</button>
           </div>
         </div>
         <div class="grid-3">
           <div class="field">
-            <label>目标平台根网址 (`base_url`)</label>
+            <label for="cfgBaseUrl">目标地址</label>
             <input type="text" id="cfgBaseUrl" class="mono" placeholder="https://platform.agnes-ai.com" />
           </div>
           <div class="field">
-            <label>运行模式 (`mode`)</label>
+            <label for="cfgMode">运行模式</label>
             <select id="cfgMode">
-              <option value="agnes">🌐 真实浏览器执行 (agnes)</option>
-              <option value="mock">🧪 本地模拟演练 (mock)</option>
+              <option value="agnes">真实浏览器</option>
+              <option value="mock">本地模拟</option>
             </select>
           </div>
           <div class="field">
-            <label>浏览器窗口模式 (`headless`)</label>
+            <label for="cfgHeadless">浏览器窗口</label>
             <select id="cfgHeadless">
-              <option value="false">🖥 显示浏览器窗口 (方便观察与调试)</option>
-              <option value="true">👻 后台静默无头运行 (Headless)</option>
+              <option value="false">显示窗口</option>
+              <option value="true">后台运行</option>
             </select>
           </div>
           <div class="field">
-            <label>同时并发窗口数 (`concurrency`)</label>
+            <label for="cfgConcurrency">并发窗口</label>
             <input type="number" id="cfgConcurrency" min="1" max="50" />
           </div>
           <div class="field">
-            <label>每分钟最大提交数 (`per_minute`)</label>
+            <label for="cfgPerMinute">每分钟提交上限</label>
             <input type="number" id="cfgPerMinute" min="0.1" step="0.5" />
           </div>
           <div class="field">
-            <label>失败最大重试次数 (`max_attempts`)</label>
+            <label for="cfgMaxAttempts">最大重试次数</label>
             <input type="number" id="cfgMaxAttempts" min="1" max="10" />
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Visual Pipeline Stage 1: Registration -->
-      <div class="card">
-        <h3 class="card-title">阶段一：打开与填写注册流程 (`registration_flow`)</h3>
-        <div class="pipeline">
-          <div class="pipe-step">
-            <div class="pipe-head">
-              <div><span class="pipe-num">1</span><span class="pipe-title">访问入口页面 & 切换到注册表单</span></div>
-              <span class="pipe-summary">PUBLIC_LOGIN_LOAD ➔ REGISTRATION_LINK</span>
+      <div id="flowPipeline" class="pipeline" aria-label="执行流程">
+        <div class="pipe-step" data-flow-kind="reg" data-stage="before_open">
+          <div class="pipe-head"><div><span class="pipe-num">1</span><span class="pipe-title">访问注册入口页</span></div><span class="pipe-summary">注册</span></div>
+          <div class="grid-3"><div class="field"><label for="regEntryPath">入口路径</label><input id="regEntryPath" type="text" class="mono" placeholder="/login" /></div></div>
+        </div>
+        <div class="pipe-step" data-flow-kind="reg" data-stage="before_fill">
+          <div class="pipe-head"><div><span class="pipe-num">2</span><span class="pipe-title">点击切换注册</span></div><span class="pipe-summary">注册</span></div>
+          <div class="grid-3"><div class="field"><label for="regOpenSelector">切换注册按钮</label><input id="regOpenSelector" type="text" class="mono" placeholder='role=link[name="注册"]' /></div></div>
+        </div>
+        <div class="pipe-step" data-flow-kind="reg" data-stage="before_code">
+          <div class="pipe-head"><div><span class="pipe-num">3</span><span class="pipe-title">填写邮箱与密码</span></div><span class="pipe-summary">注册</span></div>
+          <div class="grid-3">
+            <div class="field"><label for="regEmailSelector">邮箱输入框</label><input id="regEmailSelector" type="text" class="mono" placeholder='role=textbox[name="邮箱"]' /></div>
+            <div class="field"><label for="regPasswordSelector">密码输入框</label><input id="regPasswordSelector" type="text" class="mono" placeholder='role=textbox[name="密码"]' /></div>
+            <div class="field"><label for="regConfirmSelector">确认密码框</label><input id="regConfirmSelector" type="text" class="mono" placeholder="无确认框时选择跳过" /></div>
+          </div>
+        </div>
+        <div class="pipe-step" data-flow-kind="reg" data-stage="before_submit">
+          <div class="pipe-head"><div><span class="pipe-num">4</span><span class="pipe-title">发送并填写验证码</span></div><span class="pipe-summary">注册</span></div>
+          <div class="grid-3">
+            <div class="field"><label for="regSendReadySelector">发码就绪标志</label><input id="regSendReadySelector" type="text" class="mono" placeholder='img[alt="can send"]' /></div>
+            <div class="field"><label for="regSendClickSelector">发码按钮</label><input id="regSendClickSelector" type="text" class="mono" placeholder="留空使用就绪元素" /></div>
+            <div class="field"><label for="regCodeInputSelector">验证码输入框</label><input id="regCodeInputSelector" type="text" class="mono" placeholder='role=textbox[name="验证码"]' /></div>
+          </div>
+        </div>
+        <div class="pipe-step" data-flow-kind="reg" data-stage="after_submit">
+          <div class="pipe-head"><div><span class="pipe-num">5</span><span class="pipe-title">点击提交注册</span></div><span class="pipe-summary">注册</span></div>
+          <div class="pipe-body"><div class="field"><label for="regSubmitSelector">注册提交按钮</label><input id="regSubmitSelector" type="text" class="mono" placeholder='button:has-text("继续")' /></div><div id="regCustomStepsContainer"></div></div>
+        </div>
+        <div class="pipe-step" data-flow-kind="login" data-stage="before_submit">
+          <div class="pipe-head"><div><span class="pipe-num">6</span><span class="pipe-title">登录账号与确认身份</span></div><span class="pipe-summary">登录核验</span></div>
+          <div class="pipe-body">
+            <div class="segmented" role="group" aria-label="流程登录核验标准">
+              <button class="segment selected" id="lCardStrict" aria-pressed="true" onclick="selectLoginVerifyMode('strict_identity')">严格身份</button>
+              <button class="segment" id="lCardSelector" aria-pressed="false" onclick="selectLoginVerifyMode('selector_only')">已登录元素</button>
+              <button class="segment" id="lCardToken" aria-pressed="false" onclick="selectLoginVerifyMode('url_or_token')">跳转与令牌</button>
             </div>
+            <input type="hidden" id="cfgLoginVerifyMode" value="strict_identity" />
             <div class="grid-3">
-              <div class="field">
-                <label>入口路径 (`entry_path`)</label>
-                <input type="text" id="regEntryPath" class="mono" placeholder="/login" />
-              </div>
-              <div class="field">
-                <label>定位助手：怎么找“切换注册”按钮？</label>
-                <select onchange="applySmartSelector(this, 'regOpenSelector', '注册')">
-                  <option value="">-- 快速生成定位器 --</option>
-                  <option value="default">使用 Agnes 默认 (role=link[name="注册"])</option>
-                  <option value="text">按按钮/链接上的文字定位</option>
-                  <option value="none">入口直接就是注册页（无需点击，填 none）</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>切换注册选择器 (`open_register_selector`)</label>
-                <input type="text" id="regOpenSelector" class="mono" placeholder='留空默认：role=link[name="注册"]' />
-              </div>
+              <div class="field"><label for="loginPath">登录路径</label><input id="loginPath" type="text" class="mono" placeholder="/login" /></div>
+              <div class="field"><label for="loginEmailSelector">登录邮箱框</label><input id="loginEmailSelector" type="text" class="mono" placeholder='role=textbox[name="邮箱"]' /></div>
+              <div class="field"><label for="loginPasswordSelector">登录密码框</label><input id="loginPasswordSelector" type="text" class="mono" placeholder='input[placeholder="请输入密码"]' /></div>
+              <div class="field"><label for="loginSubmitSelector">登录提交按钮</label><input id="loginSubmitSelector" type="text" class="mono" placeholder='button:has-text("登录")' /></div>
+              <div class="field"><label for="loginApiPath">登录接口路径</label><input id="loginApiPath" type="text" class="mono" placeholder="/api/user/login（none 跳过）" /></div>
+              <div class="field"><label for="loginPostPath">登录后跳转</label><input id="loginPostPath" type="text" class="mono" placeholder="/settings/apiKeys" /></div>
+              <div class="field"><label for="loginTokenKey">本地登录令牌键名</label><input id="loginTokenKey" type="text" class="mono" value="token" /></div>
+              <div class="field"><label for="cfgIdentityNav">个人资料导航</label><input id="cfgIdentityNav" type="text" class="mono" placeholder='text="个人资料"' /></div>
+              <div class="field"><label for="cfgAuthSelector">已登录标志</label><input id="cfgAuthSelector" type="text" class="mono" placeholder='img[alt="user"]' /></div>
+              <div class="field"><label for="cfgAccountIdentitySelector">页面邮箱元素</label><input id="cfgAccountIdentitySelector" type="text" class="mono" placeholder="留空匹配页面邮箱" /></div>
             </div>
+            <button class="btn btn-ghost btn-sm" onclick="addCustomStep('login')">+ 插入登录自定义动作</button><div id="loginCustomStepsContainer"></div>
           </div>
-
-          <div class="pipe-step">
-            <div class="pipe-head">
-              <div><span class="pipe-num">2</span><span class="pipe-title">填写邮箱、密码与确认密码</span></div>
-              <span class="pipe-summary">REGISTRATION_FIELDS</span>
-            </div>
+        </div>
+        <div class="pipe-step" data-flow-kind="key" data-stage="before_extract">
+          <div class="pipe-head"><div><span class="pipe-num">7</span><span class="pipe-title">进入最终结果页面</span></div><span class="pipe-summary">结果提取</span></div>
+          <div class="grid-3">
+            <div class="field"><label for="keyNavSelector">结果页导航</label><input id="keyNavSelector" type="text" class="mono" placeholder='text="API 密钥"' /></div>
+            <div class="field"><label for="keyTargetUrl">结果页地址</label><input id="keyTargetUrl" type="text" class="mono" placeholder="/settings/apiKeys" /></div>
+          </div>
+        </div>
+        <div class="pipe-step" data-flow-kind="key" data-stage="after_create">
+          <div class="pipe-head"><div><span class="pipe-num">8</span><span class="pipe-title">触发创建目标项</span></div><span class="pipe-summary">结果提取</span></div>
+          <div class="grid-3">
+            <div class="field"><label for="keyCreateSelector">创建按钮</label><input id="keyCreateSelector" type="text" class="mono" placeholder='button:has-text("创建新的密钥")' /></div>
+            <div class="field"><label for="keyNameSelector">名称输入框</label><input id="keyNameSelector" type="text" class="mono" placeholder="#keyName" /></div>
+            <div class="field"><label for="keyNameTemplate">名称模板</label><input id="keyNameTemplate" type="text" class="mono" placeholder="Agnes Provisioner {user_id}" /></div>
+            <div class="field"><label for="keyConfirmSelector">确认创建按钮</label><input id="keyConfirmSelector" type="text" class="mono" placeholder=".ant-modal .ant-btn-primary" /></div>
+          </div>
+        </div>
+        <div class="pipe-step" data-flow-kind="key" data-stage="extract">
+          <div class="pipe-head"><div><span class="pipe-num">9</span><span class="pipe-title">提取并保存最终结果</span></div><span class="pipe-summary">结果提取</span></div>
+          <div class="pipe-body">
+            <div class="btn-row"><label class="checkbox-row"><input id="keyFlowEnabled" type="checkbox" checked />启用结果提取</label><label class="checkbox-row"><input id="keyFlowRequireKey" type="checkbox" checked />拿到结果才算完成</label></div>
             <div class="grid-3">
-              <div class="field">
-                <label>邮箱输入框选择器 (`email_selector`)</label>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="regEmailSelector" class="mono" placeholder='默认：role=textbox[name="邮箱"]' style="flex:1;" />
-                  <button class="btn btn-secondary btn-sm" onclick="promptPlaceholder('regEmailSelector', '邮箱')">按提示词</button>
-                </div>
-              </div>
-              <div class="field">
-                <label>密码输入框选择器 (`password_selector`)</label>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="regPasswordSelector" class="mono" placeholder='默认：role=textbox[name="密码"]' style="flex:1;" />
-                  <button class="btn btn-secondary btn-sm" onclick="promptPlaceholder('regPasswordSelector', '密码')">按提示词</button>
-                </div>
-              </div>
-              <div class="field">
-                <label>确认密码框选择器 (`confirm_password_selector`)</label>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="regConfirmSelector" class="mono" placeholder='默认匹配确认密码（无此框填 none）' style="flex:1;" />
-                  <button class="btn btn-secondary btn-sm" onclick="document.getElementById('regConfirmSelector').value='none'">无确认框</button>
+              <div class="field"><label for="keyExtractMode">提取渠道</label><select id="keyExtractMode"><option value="auto">自动提取</option><option value="dom_regex">页面文本正则</option><option value="network_json">接口 JSON</option><option value="clipboard_copy">复制按钮</option><option value="local_storage">本地存储</option></select></div>
+              <div class="field"><label for="keyValueSelector">结果文本容器</label><input id="keyValueSelector" type="text" class="mono" placeholder=".ant-modal, .ant-table-tbody" /></div>
+              <div class="field"><label for="keyCopySelector">复制按钮</label><input id="keyCopySelector" type="text" class="mono" placeholder='img[alt="复制"]' /></div>
+              <div class="field"><label for="keyStorageKey">本地存储键名</label><input id="keyStorageKey" type="text" class="mono" placeholder="token" /></div>
+              <div class="field" style="grid-column:span 2"><label for="keyPattern">结果正则</label><input id="keyPattern" type="text" class="mono" oninput="runRegexTester()" placeholder="sk-[A-Za-z0-9_-]{16,}" />
+                <div class="btn-row">
+                  <button class="btn btn-ghost btn-sm" onclick="setKeyPattern('sk-[A-Za-z0-9_-]{16,}')">API Key</button>
+                  <button class="btn btn-ghost btn-sm" onclick="setKeyPattern('eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+')">JWT</button>
+                  <button class="btn btn-ghost btn-sm" onclick="setKeyPattern('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')">UUID</button>
+                  <button class="btn btn-ghost btn-sm" onclick="setKeyPattern('.+')">非空文本</button>
+                  <button class="btn btn-ghost btn-sm" onclick="setKeyPattern('(?&lt;!\\d)\\d{6}(?!\\d)')">6 位数字</button>
                 </div>
               </div>
             </div>
+            <div class="regex-tester"><label class="stat-label" for="regexSampleInput">正则预览</label><div class="grid-2"><input id="regexSampleInput" type="text" class="mono" oninput="runRegexTester()" value='{"data":{"apiKey":"sk-AbCdEf1234567890"}}' placeholder="示例文本或 JSON" /><div id="regexTestResult" class="mono"></div></div></div>
+            <button class="btn btn-ghost btn-sm" onclick="addCustomStep('key')">+ 插入结果流程步骤</button><div id="keyCustomStepsContainer"></div>
           </div>
-
-          <div class="pipe-step">
-            <div class="pipe-head">
-              <div><span class="pipe-num">3</span><span class="pipe-title">发送验证码、填写验证码并点击提交</span></div>
-              <span class="pipe-summary">EMAIL_REQUESTED ➔ REGISTRATION_SUBMITTED</span>
-            </div>
-            <div class="grid-2">
-              <div class="field">
-                <label>发码按钮就绪选择器 (`send_code_ready_selector`)</label>
-                <input type="text" id="regSendReadySelector" class="mono" placeholder='默认：img[alt="can send"]' />
-              </div>
-              <div class="field">
-                <label>点击发码选择器 (`send_code_click_selector`，留空同左)</label>
-                <input type="text" id="regSendClickSelector" class="mono" placeholder="留空则直接点击就绪元素" />
-              </div>
-              <div class="field">
-                <label>验证码输入框选择器 (`code_input_selector`)</label>
-                <input type="text" id="regCodeInputSelector" class="mono" placeholder='默认：role=textbox[name="验证码"]' />
-              </div>
-              <div class="field">
-                <label>提交注册按钮选择器 (`submit_button_selector`)</label>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="regSubmitSelector" class="mono" placeholder='默认：button:has-text("继续")' style="flex:1;" />
-                  <button class="btn btn-secondary btn-sm" onclick="promptTextSelector('regSubmitSelector', '立即注册')">按按钮文字</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top: 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <label style="font-size:13.5px; font-weight:700;">➕ 注册阶段插入自定义步骤（支持 ↑↓ 调整顺序，可用变量 `{email}` `{password}` `{user_id}` `{code}`）</label>
-            <button class="btn btn-primary btn-sm" onclick="addCustomStep('reg')">+ 插入注册自定义步骤</button>
-          </div>
-          <div id="regCustomStepsContainer"></div>
-        </div>
-      </div>
-
-      <!-- Visual Pipeline Stage 2: Login & Identity Verification -->
-      <div class="card">
-        <h3 class="card-title">阶段二：登录核验与身份确认流程 (`login_flow`)</h3>
-        <div class="choice-grid">
-          <div class="choice-card selected" id="lCardStrict" onclick="selectLoginVerifyMode('strict_identity')">
-            <h4>🛡 严格核验模式 (strict_identity)</h4>
-            <p>确认页面显示当前用户的完整邮箱 + 出现已登录标志元素（最安全，防串号）。</p>
-          </div>
-          <div class="choice-card" id="lCardSelector" onclick="selectLoginVerifyMode('selector_only')">
-            <h4>🎯 元素核验模式 (selector_only)</h4>
-            <p>只要登录后页面出现指定的“已登录标志元素”即判定登录成功。</p>
-          </div>
-          <div class="choice-card" id="lCardToken" onclick="selectLoginVerifyMode('url_or_token')">
-            <h4>⚡ 快速 Token 模式 (url_or_token)</h4>
-              <p>必须同时满足：可信站点内离开登录页 + 非空 LocalStorage Token。严格身份核验更适合正式交付。</p>
-          </div>
-        </div>
-        <input type="hidden" id="cfgLoginVerifyMode" value="strict_identity" />
-
-        <div class="grid-3">
-          <div class="field">
-            <label>登录页路径 (`login_path`)</label>
-            <input type="text" id="loginPath" class="mono" placeholder="/login" />
-          </div>
-          <div class="field">
-            <label>登录邮箱框选择器 (`email_selector`)</label>
-            <input type="text" id="loginEmailSelector" class="mono" placeholder='默认：role=textbox[name="邮箱"]' />
-          </div>
-          <div class="field">
-            <label>登录密码框选择器 (`password_selector`)</label>
-            <input type="text" id="loginPasswordSelector" class="mono" placeholder='默认：input[placeholder="请输入密码"]' />
-          </div>
-          <div class="field">
-            <label>登录提交按钮选择器 (`submit_selector`)</label>
-            <input type="text" id="loginSubmitSelector" class="mono" placeholder='默认：button:has-text("登录")' />
-          </div>
-          <div class="field">
-            <label>登录接口校验路径 (`login_api_path`，不拦截填 none)</label>
-            <input type="text" id="loginApiPath" class="mono" placeholder="/api/user/login" />
-          </div>
-          <div class="field">
-            <label>登录后跳转路径 (`post_login_path`)</label>
-            <input type="text" id="loginPostPath" class="mono" placeholder="/settings/apiKeys" />
-          </div>
-          <div class="field"><label>登录令牌 LocalStorage 键名</label><input id="loginTokenKey" type="text" value="token" /></div>
-          <div class="field">
-            <label>个人资料导航选择器 (`identity_navigation_selector`)</label>
-            <input type="text" id="cfgIdentityNav" class="mono" placeholder='text="个人资料"' />
-          </div>
-          <div class="field">
-            <label>已登录标志选择器 (`authenticated_selector`)</label>
-            <input type="text" id="cfgAuthSelector" class="mono" placeholder='img[alt="user"]' />
-          </div>
-          <div class="field">
-            <label>页面邮箱元素选择器 (`account_identity_selector`)</label>
-            <input type="text" id="cfgAccountIdentitySelector" class="mono" placeholder="留空默认全文匹配邮箱文字" />
-          </div>
-        </div>
-        <div class="insert-zone"><button class="btn btn-primary btn-sm" onclick="addCustomStep('login')">+ 插入登录自定义动作</button><div id="loginCustomStepsContainer"></div></div>
-      </div>
-
-      <!-- Visual Pipeline Stage 3: Final Result / Key Flow + Live Regex Tester -->
-      <div class="card">
-        <h3 class="card-title">阶段三：获得最终想要结果的流程 (`key_flow` / Result Flow)</h3>
-        <div class="btn-row" style="margin-bottom: 14px; gap: 24px;">
-          <label class="checkbox-row">
-            <input type="checkbox" id="keyFlowEnabled" checked />
-            <b>启用最终结果提取流程 (`key_flow.enabled`)</b>
-          </label>
-          <label class="checkbox-row">
-            <input type="checkbox" id="keyFlowRequireKey" checked />
-            <b>必须提取到最终结果才算任务完成 (`require_key`)</b>
-          </label>
-        </div>
-
-        <div class="pipeline">
-          <div class="pipe-step">
-            <div class="pipe-head">
-              <div><span class="pipe-num">1</span><span class="pipe-title">进入最终结果所在页面 & 触发创建动作</span></div>
-              <span class="pipe-summary">KEY_REQUESTED</span>
-            </div>
-            <div class="grid-3">
-              <div class="field">
-                <label>点击进入结果页选择器 (`navigation_selector`)</label>
-                <input type="text" id="keyNavSelector" class="mono" placeholder='text="API 密钥"' />
-              </div>
-              <div class="field">
-                <label>或直接跳转结果页 URL (`target_url`)</label>
-                <input type="text" id="keyTargetUrl" class="mono" placeholder="例如：/settings/apiKeys" />
-              </div>
-              <div class="field">
-                <label>点击“创建新密钥/目标”按钮 (`create_selector`)</label>
-                <input type="text" id="keyCreateSelector" class="mono" placeholder='button:has-text("创建新的密钥") >> nth=0' />
-              </div>
-              <div class="field">
-                <label>名称输入框选择器 (`name_selector`)</label>
-                <input type="text" id="keyNameSelector" class="mono" placeholder="#keyName" />
-              </div>
-              <div class="field">
-                <label>填写的名称模板 (`name_template`)</label>
-                <input type="text" id="keyNameTemplate" class="mono" placeholder="Agnes Provisioner {user_id}" />
-              </div>
-              <div class="field">
-                <label>弹窗确认创建按钮 (`confirm_selector`)</label>
-                <input type="text" id="keyConfirmSelector" class="mono" placeholder=".ant-modal .ant-btn-primary" />
-              </div>
-            </div>
-          </div>
-
-          <div class="pipe-step">
-            <div class="pipe-head">
-              <div><span class="pipe-num">2</span><span class="pipe-title">提取最终想要的结果 (DOM / 接口JSON / 剪贴板 / LocalStorage)</span></div>
-              <span class="pipe-summary">ACTIVATED_WITH_KEY</span>
-            </div>
-            <div class="grid-3">
-              <div class="field">
-                <label>结果提取渠道 (`extract_mode`)</label>
-                <select id="keyExtractMode">
-                  <option value="auto">✨ 全能自动提取 (DOM + 接口JSON + 剪贴板复制)</option>
-                  <option value="dom_regex">📄 仅从页面元素文本正则提取 (DOM Regex)</option>
-                  <option value="network_json">🌐 仅从接口返回 JSON 自动抓取 (Network JSON)</option>
-                  <option value="clipboard_copy">📋 仅点击复制按钮拦截剪贴板</option>
-                  <option value="local_storage">🗄 从浏览器 LocalStorage 读取指定键</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>结果文本容器选择器 (`value_selector`)</label>
-                <input type="text" id="keyValueSelector" class="mono" placeholder=".ant-modal, .ant-table-tbody" />
-              </div>
-              <div class="field">
-                <label>复制按钮选择器 (`copy_selector`)</label>
-                <input type="text" id="keyCopySelector" class="mono" placeholder='tr:has-text("Agnes Provisioner {user_id}") img[alt="复制"]' />
-              </div>
-              <div class="field">
-                <label>LocalStorage 键名 (`storage_key`，可选)</label>
-                <input type="text" id="keyStorageKey" class="mono" placeholder="例如：token" />
-              </div>
-              <div class="field" style="grid-column: span 2;">
-                <label>最终结果正则匹配规则 (`pattern`) —— 点击右侧模板可快速填入：</label>
-                <input type="text" id="keyPattern" class="mono" oninput="runRegexTester()" placeholder="sk-[A-Za-z0-9_-]{16,}" />
-                <div class="btn-row" style="margin-top:4px;">
-                  <button class="btn btn-secondary btn-sm" onclick="setKeyPattern('sk-[A-Za-z0-9_-]{16,}')">sk- API密钥</button>
-                  <button class="btn btn-secondary btn-sm" onclick="setKeyPattern('eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+')">JWT Token</button>
-                  <button class="btn btn-secondary btn-sm" onclick="setKeyPattern('[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')">UUID格式</button>
-                   <button class="btn btn-secondary btn-sm" onclick="setKeyPattern('.+')">任意非空内容</button>
-                   <button class="btn btn-secondary btn-sm" onclick="setKeyPattern('(?&lt;!\\d)\\d{6}(?!\\d)')">6 位数字码</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Live Regex Tester (ISS-002) -->
-            <div style="margin-top: 10px; padding: 12px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 8px;">
-              <div style="font-size: 12.5px; font-weight: 700; margin-bottom: 6px;">🧪 正则表达式实时测试器（粘贴示例网页文字或 JSON，立即验证能否提取出想要的结果）</div>
-              <div class="grid-2" style="align-items: center;">
-                <input type="text" id="regexSampleInput" class="mono" oninput="runRegexTester()" value='{"code":200,"data":{"apiKey":"sk-AbCdEf1234567890"}}' placeholder="在此粘贴包含目标结果的示例文本..." />
-                <div id="regexTestResult" class="mono" style="font-size: 13px; color: var(--success); font-weight: 700;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top: 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <label style="font-size:13.5px; font-weight:700;">➕ 结果阶段自定义步骤（支持 ↑↓ 调整顺序）</label>
-            <button class="btn btn-primary btn-sm" onclick="addCustomStep('key')">+ 插入结果流程步骤</button>
-          </div>
-          <div id="keyCustomStepsContainer"></div>
-        </div>
-
-        <div class="btn-row" style="margin-top: 16px;">
-          <button class="btn btn-primary" onclick="saveAllConfig()">💾 保存全部流程修改并写入配置文件</button>
         </div>
       </div>
     </div>
 
     <!-- ==================== TAB 4: PROXY POOL & AUTO IP ROTATION (ISS-004) ==================== -->
     <div id="tab-proxies" class="tab-panel">
-      <!-- Active Proxy & Rotation Progress Banner (ISS-004) -->
-      <div class="card" style="border-color: rgba(139, 92, 246, 0.4);">
-        <div class="card-title">
-          <span>🌐 当前激活代理 & 自动换 IP 实时进度监控</span>
-          <div class="btn-row">
-            <button class="btn btn-secondary btn-sm" onclick="proxyAction('rotate_now')">⏭ 立即手动切换到下一个 IP</button>
-            <button class="btn btn-secondary btn-sm" onclick="proxyAction('reset_rotation')">♻️ 重置所有计数与状态</button>
-          </div>
+      <div class="proxy-status">
+        <div class="proxy-identity">
+          <div class="stat-label">当前节点</div>
+          <div class="mono" id="activeProxyNodeTitle">本机直连</div>
+          <div id="activeProxyServerSub">未启用代理池</div>
         </div>
-        <div class="grid-3" style="align-items: center; margin-top: 8px;">
-          <div>
-            <div style="font-size: 12px; color: var(--text-muted);">当前顺位首选代理节点</div>
-            <div style="font-size: 18px; font-weight: 800; color: var(--purple);" class="mono" id="activeProxyNodeTitle">本机直连 (未导入代理)</div>
-            <div style="font-size: 12px; color: var(--text-muted);" id="activeProxyServerSub">-</div>
+        <div class="proxy-progress">
+          <div id="activeProxyWindowLabel">本轮进度：0 / 1</div>
+          <div class="progress-track">
+            <div class="progress-seg" id="activeProxyProgressBar" style="width:0%;background:var(--primary)"></div>
           </div>
-          <div style="grid-column: span 2;">
-            <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:4px;">
-              <span id="activeProxyWindowLabel">本轮换 IP 进度：0 / 1 次</span>
-              <span id="activeProxyCountdownLabel" style="color: var(--success);">完成设定次数后自动切换下一节点</span>
-            </div>
-            <div class="progress-track" style="height: 12px;">
-              <div class="progress-seg" id="activeProxyProgressBar" style="width: 0%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);"></div>
-            </div>
-          </div>
+          <div id="activeProxyCountdownLabel">未启用轮换</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" onclick="proxyAction('rotate_now')" aria-label="⏭ 立即手动切换到下一个 IP">切换节点</button>
+          <button class="btn btn-ghost btn-sm" onclick="proxyAction('reset_rotation')" aria-label="♻️ 重置所有计数与状态">重置计数</button>
         </div>
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2 proxy-columns">
         <!-- Rotation Policy Configuration -->
-        <div class="card">
-          <h3 class="card-title">🔄 满 X 次自动换 IP 策略设置 (`proxy_pool`)</h3>
-          <p class="card-desc">选择按“达成想要的结果次数”还是“执行注册流程次数”触发换 IP。</p>
-
-          <div class="choice-grid" style="grid-template-columns: 1fr;">
-            <div class="choice-card selected" id="pModeResult" onclick="selectProxyRotateMode('result_reached')">
-              <h4>🎯 模式 1：每达到 X 次【最终想要的结果】就换 IP（推荐）</h4>
-              <p>只有成功完成注册并拿到最终结果（如 API Key）才计入次数，满 X 次立即换下一个代理 IP。</p>
-            </div>
-            <div class="choice-card" id="pModeExec" onclick="selectProxyRotateMode('execution_count')">
-              <h4>🔢 模式 2：每执行 X 次【注册流程】就换 IP</h4>
-              <p>无论成功或失败，只要用当前代理跑满 X 次流程就立即切换下一个代理 IP。</p>
-            </div>
-            <div class="choice-card" id="pModeBoth" onclick="selectProxyRotateMode('both')">
-              <h4>⚡ 模式 3：达成 X 次目标结果 【或】 执行满 Y 次流程就换 IP</h4>
-              <p>双重兜底：拿到 X 个结果换 IP；如果一直没成功，最多执行 Y 次也强制换 IP。</p>
-            </div>
+        <section class="surface-section">
+          <div class="section-title"><h2>轮换策略</h2><button class="btn btn-primary btn-sm" onclick="saveAllConfig()" aria-label="💾 保存换 IP 策略设置">保存策略</button></div>
+          <div class="mode-field"><div class="segmented" role="group" aria-label="换 IP 策略">
+            <button class="segment selected" id="pModeResult" aria-pressed="true" onclick="selectProxyRotateMode('result_reached')">按结果</button>
+            <button class="segment" id="pModeExec" aria-pressed="false" onclick="selectProxyRotateMode('execution_count')">按执行</button>
+            <button class="segment" id="pModeBoth" aria-pressed="false" onclick="selectProxyRotateMode('both')">双阈值</button>
+          </div>
           </div>
           <input type="hidden" id="cfgProxyRotateMode" value="result_reached" />
 
           <div class="grid-2">
             <div class="field">
-              <label>触发换 IP 的次数阈值 (`rotate_every` = X)</label>
+              <label for="cfgProxyRotateEvery" id="proxyThresholdLabel">结果阈值</label>
               <input type="number" id="cfgProxyRotateEvery" min="1" max="10000" value="2" />
             </div>
             <div class="field">
-              <label>单 IP 最大执行次数兜底 (`rotate_executions_limit` = Y)</label>
+              <label for="cfgProxyExecLimit">执行兜底上限</label>
               <input type="number" id="cfgProxyExecLimit" min="1" max="10000" value="3" />
             </div>
           </div>
@@ -1414,58 +1191,56 @@ WEB_HTML = r"""<!DOCTYPE html>
           <div class="field">
             <label class="checkbox-row">
               <input type="checkbox" id="cfgAutoSwitchIpLimit" checked />
-              <b>遇到平台提示“当前 IP 注册过多”时自动熔断并切换下一个 IP</b>
+              IP 注册受限时自动切换
             </label>
           </div>
           <div class="field">
             <label class="checkbox-row">
               <input type="checkbox" id="cfgEnableSessionStickiness" />
-              <b>动态隧道代理模式：换 IP 时自动给用户名追加新 `-session-随机ID`</b>
+              动态隧道会话轮换
             </label>
           </div>
           <div class="field">
             <label class="checkbox-row">
               <input type="checkbox" id="cfgProxyRequired" />
-              <b>强制要求代理 (`proxy_required`：无可用代理时暂停保护，不走本机直连)</b>
+              强制代理（无可用节点时暂停）
             </label>
           </div>
           <div class="field">
-            <label>动态隧道会话后缀模板 (`session_suffix_template`)</label>
+            <label for="cfgSessionSuffix">会话后缀模板</label>
             <input type="text" id="cfgSessionSuffix" class="mono" placeholder="-session-{session}-time-30" />
           </div>
 
-          <button class="btn btn-primary" onclick="saveAllConfig()">💾 保存换 IP 策略设置</button>
-        </div>
+        </section>
 
         <!-- Batch Proxy Import with Live Preview -->
-        <div class="card">
-          <h3 class="card-title">➕ 批量导入代理池（支持实时解析预览）</h3>
-          <p class="card-desc">直接粘贴 HTTP / HTTPS / SOCKS5 代理列表，支持固定 IP 池或带 `{session}` 的动态隧道代理。</p>
+        <section class="surface-section">
+          <h2 class="section-title">导入代理</h2>
           <div class="grid-2">
             <div class="field">
-              <label>导入后初始状态</label>
+              <label for="proxyInitialStatus">初始状态</label>
               <select id="proxyInitialStatus">
-                <option value="HEALTHY">✅ 直接设为可用 (HEALTHY，立即可跑)</option>
-                <option value="UNCHECKED">🔍 设为待检测 (需先点检测连通性)</option>
+                <option value="HEALTHY">可用</option>
+                <option value="UNCHECKED">待检测</option>
               </select>
             </div>
             <div class="field">
-              <label>代理类型预设</label>
+              <label for="proxySessionMode">代理类型</label>
               <select id="proxySessionMode">
-                <option value="false">📋 静态/独立 IP 代理池（多节点轮换）</option>
-                <option value="true">🌪 动态会话隧道代理（自动刷新 Session 换 IP）</option>
+                <option value="false">静态节点</option>
+                <option value="true">动态会话隧道</option>
               </select>
             </div>
           </div>
 
           <div class="field">
-            <label>粘贴代理地址（每行一条）</label>
-            <textarea id="importProxiesText" rows="5" oninput="updateProxyPreview()" placeholder="支持以下任意格式：&#10;http://user:pass@1.2.3.4:8080&#10;1.2.3.4:8080:user:pass&#10;http://user-{session}:pass@gate.example.com:3128&#10;socks5://127.0.0.1:10808"></textarea>
+            <label for="importProxiesText">代理地址</label>
+            <textarea id="importProxiesText" rows="3" oninput="updateProxyPreview()" placeholder="每行一个 HTTP / HTTPS / SOCKS5 节点&#10;http://user:pass@127.0.0.1:8080"></textarea>
           </div>
 
           <div style="margin-bottom: 12px;">
             <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; margin-bottom:6px;">
-              <span>🔍 代理格式实时解析预览</span>
+              <span>解析预览</span>
               <span id="proxyPreviewCount" class="badge badge-muted">0 条</span>
             </div>
             <div class="table-wrap" style="max-height: 150px; overflow-y: auto;">
@@ -1474,30 +1249,29 @@ WEB_HTML = r"""<!DOCTYPE html>
                    <tr><th>行</th><th>协议 / 主机 / 端口</th><th>账密认证</th><th>会话换IP模式 / 错误</th></tr>
                 </thead>
                 <tbody id="proxyPreviewBody">
-                  <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">粘贴代理后自动预览解析结果</td></tr>
+                  <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">暂无数据</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
 
           <div class="btn-row">
-            <label class="checkbox-row" style="font-size:12.5px;">
+            <label class="checkbox-row">
               <input type="checkbox" id="proxyClearExisting" />
-              导入前清空旧代理池
+              替换旧代理池
             </label>
-            <button class="btn btn-primary" onclick="submitImportProxies()">🌐 确认导入代理池</button>
-            <button class="btn btn-success" onclick="checkAllProxies()">⚡ 并发测速 & 查出口IP</button>
-            <button class="btn btn-danger btn-sm" onclick="proxyAction('clear_all')">🗑 清空</button>
+            <button class="btn btn-primary" onclick="submitImportProxies()" aria-label="🌐 确认导入代理池">导入代理</button>
+            <button class="btn btn-secondary" onclick="checkAllProxies()" aria-label="⚡ 并发测速 & 查出口IP">测速与出口 IP</button>
+            <button class="btn btn-danger btn-sm" onclick="proxyAction('clear_all')">清空</button>
           </div>
           <div id="proxyImportMsg" style="margin-top: 8px; font-size: 13px; color: var(--success);"></div>
-        </div>
+        </section>
       </div>
 
       <!-- Proxy Pool Nodes Table -->
-      <div class="card">
-        <div class="card-title">
-          <span>代理池节点矩阵与本轮换 IP 进度</span>
-          <span style="font-size: 12.5px; color: var(--text-muted);">调度器始终优先分配【轮换轮次最小】的可用代理，满 X 次后自动切入下一节点</span>
+      <section class="surface-section">
+        <div class="section-title">
+          <h2>代理节点</h2>
         </div>
         <div class="table-wrap">
           <table>
@@ -1519,28 +1293,39 @@ WEB_HTML = r"""<!DOCTYPE html>
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
     <div id="tab-delivery" class="tab-panel">
-      <div class="card"><h3 class="card-title">交付导出</h3>
-        <p class="card-desc">导出顶部选中的批次；选择“全部批次汇总”则导出所有记录。默认隐藏邮箱和凭证。</p>
-        <label class="checkbox-row"><input id="exportIncludeSecrets" type="checkbox" />我需要包含明文账号密码与最终结果的交付文件</label>
-        <div class="btn-row" style="margin-top:16px"><button class="btn btn-primary" onclick="exportData('xlsx')">导出 Excel</button><button class="btn btn-secondary" onclick="exportData('csv')">导出 CSV</button></div>
-      </div>
-      <div class="card"><h3 class="card-title">数据库与加密凭证备份</h3><p class="card-desc">停止执行器后备份。备份保存在配置目录的 outputs/backups 下；DPAPI 凭证只能由保存时的 Windows 用户解密，不会写入明文密码。</p><button class="btn btn-secondary" onclick="createBackup()">创建本地一致性备份</button><p id="backupResult" class="mono"></p></div>
+      <section class="surface-section"><h2 class="section-title">交付导出</h2>
+        <label class="checkbox-row"><input id="exportIncludeSecrets" type="checkbox" />包含明文凭证与提取结果</label>
+        <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onclick="exportData('xlsx')">导出 Excel</button><button class="btn btn-secondary" onclick="exportData('csv')">导出 CSV</button></div>
+        <p class="security-note">范围：当前批次 · 默认脱敏 · 明文导出需确认</p>
+      </section>
+      <section class="surface-section"><h2 class="section-title">加密备份</h2><button class="btn btn-secondary" onclick="createBackup()">创建本地一致性备份</button><p class="security-note">执行器停止后可用 · 凭证仅限当前 Windows 用户解密</p><p id="backupResult" class="mono"></p></section>
     </div>
   </main>
+  <section id="terminalDock" class="terminal-dock" aria-label="运行终端">
+    <button id="terminalToggle" class="terminal-toggle" aria-label="运行终端" aria-expanded="false" aria-controls="terminalBody" onclick="toggleTerminal()">运行终端<span id="terminalSlotSummary" class="mono">0 个运行槽位</span></button>
+    <div id="terminalBody" class="terminal-body" hidden>
+      <div class="terminal-toolbar">
+        <span id="runnerSlots" class="mono"></span>
+        <label class="checkbox-row"><input id="logAutoScroll" type="checkbox" checked />自动滚动</label>
+        <button class="btn btn-ghost btn-sm" onclick="clearLogs()" aria-label="清空当前日志视图">清空日志</button>
+      </div>
+      <div class="log-box" id="runnerLogsBox" role="log" aria-label="实时运行日志" aria-live="off" tabindex="0">等待任务启动…</div>
+    </div>
+  </section>
 </div>
 
 <!-- Floating Bulk Action Bar (ISS-001) -->
 <div id="floatingBulkBar" class="floating-bulk-bar">
   <span style="font-weight: 700; font-size: 13.5px;">已勾选 <b id="selectedCountText" style="color: var(--primary);">0</b> 个账号</span>
-  <button class="btn btn-primary btn-sm" onclick="batchSelectedAction('verify')">🔐 批量验证登录 & 拿结果</button>
-  <button class="btn btn-secondary btn-sm" onclick="batchSelectedAction('check_mailbox')">📬 测试邮箱连接</button>
-  <button class="btn btn-secondary btn-sm" onclick="batchSelectedAction('requeue_login')">🔄 设为已有账号(仅登录拿结果)</button>
-  <button class="btn btn-secondary btn-sm" onclick="batchSelectedAction('requeue')">♻️ 重置为重新注册</button>
-  <button class="btn btn-danger btn-sm" onclick="batchSelectedAction('delete')">🗑 批量删除</button>
-  <button class="btn btn-secondary btn-sm" onclick="clearJobSelection()">✖ 取消选择</button>
+  <button class="btn btn-primary btn-sm" onclick="batchSelectedAction('verify')">核验所选</button>
+  <button class="btn btn-secondary btn-sm" onclick="batchSelectedAction('check_mailbox')">测试邮箱</button>
+  <button class="btn btn-ghost btn-sm" onclick="batchSelectedAction('requeue_login')">设为仅登录</button>
+  <button class="btn btn-ghost btn-sm" onclick="batchSelectedAction('requeue')">重新注册</button>
+  <button class="btn btn-danger btn-sm" onclick="batchSelectedAction('delete')">删除</button>
+  <button class="btn btn-ghost btn-sm" onclick="clearJobSelection()">取消选择</button>
 </div>
 
 <!-- Right Slide-over Drawer for Single Job Details & Password Edit (ISS-001) -->
@@ -1551,39 +1336,39 @@ WEB_HTML = r"""<!DOCTYPE html>
       <div style="font-size:16px; font-weight:800;" id="drawerEmailTitle">账号详情</div>
       <div style="font-size:12px; color:var(--text-muted);" class="mono" id="drawerSubMeta"></div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="closeJobDrawer()">✕ 关闭 (ESC)</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeJobDrawer()">关闭 · Esc</button>
   </div>
 
   <div id="drawerQuickActions" class="btn-row" style="margin-bottom: 16px;"></div>
 
-  <div class="card" style="padding: 14px; margin-bottom: 16px;">
-    <div style="font-size: 13.5px; font-weight: 700; margin-bottom: 10px;">🔑 账号加密凭证与最终提取结果</div>
+  <div class="surface-section" style="padding:0 0 16px; margin-bottom:16px;">
+    <div class="section-title">加密凭证</div>
     <div class="field">
-      <label>已提取的最终结果 (`api_key` / Token)</label>
+      <label for="drawerApiKey">提取结果</label>
       <div style="display:flex; gap:6px;">
         <input type="password" id="drawerApiKey" class="mono" readonly style="flex:1; color: var(--success);" />
-        <button class="btn btn-secondary btn-sm" onclick="copyJobField(STATE.activeDrawerJobId, 'api_key')">📋 复制</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyJobField(STATE.activeDrawerJobId, 'api_key')">复制</button>
       </div>
     </div>
     <div class="grid-2">
       <div class="field" style="margin-bottom:0;">
-        <label>平台登录密码 (`agnes_password`)</label>
+        <label for="drawerAgnesPwd">平台密码</label>
         <input type="password" id="drawerAgnesPwd" autocomplete="new-password" class="mono" placeholder="输入新平台登录密码（留空不改）" />
       </div>
       <div class="field" style="margin-bottom:0;">
-        <label>邮箱密码 (`mailbox_password`)</label>
+        <label for="drawerMailboxPwd">邮箱密码</label>
         <input type="password" id="drawerMailboxPwd" autocomplete="new-password" class="mono" placeholder="输入新邮箱密码（留空不改）" />
       </div>
     </div>
     <div class="btn-row" style="margin-top: 10px;">
-      <button class="btn btn-primary btn-sm" onclick="saveDrawerPassword()">💾 保存修改后的密码到加密库</button>
-      <button class="btn btn-secondary btn-sm" onclick="copyJobField(STATE.activeDrawerJobId, 'agnes_password')">📋 复制平台密码</button>
+      <button class="btn btn-primary btn-sm" onclick="saveDrawerPassword()" aria-label="💾 保存修改后的密码到加密库">保存密码</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyJobField(STATE.activeDrawerJobId, 'agnes_password')">复制平台密码</button>
       <button id="drawerReveal" class="btn btn-secondary btn-sm" onclick="toggleDrawerSecrets()">显示当前凭证</button>
     </div>
   </div>
 
   <div>
-    <div style="font-size: 13.5px; font-weight: 700; margin-bottom: 12px;">⏱ 状态变更与执行时间线 (`job_events`)</div>
+    <div class="section-title">执行时间线</div>
     <div id="drawerTimelineBox"></div>
   </div>
 </aside>
@@ -1628,6 +1413,24 @@ function toggleTheme() {
   localStorage.setItem('agnes-theme', next);
 }
 
+function toggleTerminal() {
+  const button = document.getElementById('terminalToggle');
+  const body = document.getElementById('terminalBody');
+  const expanded = button.getAttribute('aria-expanded') !== 'true';
+  button.setAttribute('aria-expanded', String(expanded));
+  body.hidden = !expanded;
+  localStorage.setItem('agnes-terminal-open', String(expanded));
+  syncTerminalHeight();
+  if (expanded && document.getElementById('logAutoScroll').checked) {
+    const logs = document.getElementById('runnerLogsBox');
+    logs.scrollTop = logs.scrollHeight;
+  }
+}
+
+function syncTerminalHeight() {
+  document.documentElement.style.setProperty('--terminal-height', document.getElementById('terminalDock').offsetHeight + 'px');
+}
+
 async function copyText(text, label = '内容') {
   if (!text) {
     showToast(`没有可复制的${label}`, true);
@@ -1635,7 +1438,7 @@ async function copyText(text, label = '内容') {
   }
   try {
     await navigator.clipboard.writeText(text);
-    showToast(`📋 已复制${label}到剪贴板！`);
+    showToast(`已复制${label}到剪贴板`);
   } catch {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -1643,7 +1446,7 @@ async function copyText(text, label = '内容') {
     ta.select();
     const copied = document.execCommand('copy');
     ta.remove();
-    showToast(copied ? `📋 已复制${label}到剪贴板！` : '浏览器未允许复制，请手动复制。', !copied);
+    showToast(copied ? `已复制${label}到剪贴板` : '浏览器未允许复制，请手动复制。', !copied);
   }
 }
 
@@ -1661,7 +1464,8 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.removeAttribute('aria-current'));
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-current', 'page'); }
 }
 
 function stateBadge(state, label) {
@@ -1703,14 +1507,14 @@ async function loadOverview(populateForm = false) {
     const completed = s.succeeded_with_key || 0;
     document.getElementById('statSucceeded').textContent = completed;
     document.getElementById('statWithKey').textContent = `其中已提取最终结果: ${s.succeeded_with_key || 0}`;
-    document.getElementById('statPending').textContent = pending;
-    document.getElementById('statRunning').textContent = `正在运行: ${running}`;
+    document.getElementById('statPending').textContent = `待执行 ${pending}`;
+    document.getElementById('statRunning').textContent = running;
     document.getElementById('statReview').textContent = review;
     document.getElementById('statFailed').textContent = `失败/跳过: ${failed}`;
 
     // Progress bar
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    document.getElementById('progressPercentText').textContent = `含结果完成率 ${pct}% (${completed}/${total})`;
+    document.getElementById('progressPercentText').textContent = `完成率 ${pct}%`;
     document.getElementById('progSuccess').style.width = total ? `${(completed / total) * 100}%` : '0%';
     document.getElementById('progNoKey').style.width = total ? `${((succ - completed) / total) * 100}%` : '0%';
     document.getElementById('progPending').style.width = total ? `${(pending / total) * 100}%` : '0%';
@@ -1724,15 +1528,17 @@ async function loadOverview(populateForm = false) {
     const every = poolCfg.rotate_every || 1;
     const np = p.active_proxy || p.next_proxy;
     if (p.total === 0) {
-      document.getElementById('statProxySummary').textContent = '直连 (0 节点)';
-      document.getElementById('topIpCapsuleText').textContent = '本机直连 (无代理池)';
-      document.getElementById('activeProxyNodeTitle').textContent = '本机直连 (未导入代理)';
-      document.getElementById('activeProxyServerSub').textContent = '前往下方粘贴导入代理即可启用自动换 IP';
+      document.getElementById('statProxySummary').textContent = '直连';
+      document.getElementById('topIpCapsuleText').textContent = '本机直连';
+      document.getElementById('activeProxyNodeTitle').textContent = '本机直连';
+      document.getElementById('activeProxyServerSub').textContent = '未启用代理池';
+      document.getElementById('activeProxyWindowLabel').textContent = '本轮进度：—';
+      document.getElementById('activeProxyCountdownLabel').textContent = '未启用轮换';
       document.getElementById('activeProxyProgressBar').style.width = '0%';
     } else {
       const rotation = rotationProgress(np, poolCfg);
       const ipText = np ? (np.last_ip || np.server) : '无可用健康代理';
-      document.getElementById('statProxySummary').textContent = `${p.healthy}/${p.total} 可用`;
+      document.getElementById('statProxySummary').textContent = `${p.healthy}/${p.total}`;
       document.getElementById('topIpCapsuleText').textContent = np
         ? `${np.id} (${ipText}) · ${rotation.label}`
         : `代理池 0/${p.total} 可用`;
@@ -1767,7 +1573,12 @@ async function loadOverview(populateForm = false) {
       pill.className = 'status-pill idle';
       rText.textContent = '空闲待命';
     }
-    document.getElementById('runnerSlots').textContent = `运行槽位 ${(data.runner.slots || []).length}/${data.settings.concurrency} · ` + (data.runner.slots || []).map(j => `${j.user_id}: ${j.phase}`).join(' · ');
+    const slots = data.runner.slots || [];
+    document.getElementById('terminalSlotSummary').textContent = `${slots.length}/${data.settings.concurrency} 槽位`;
+    document.getElementById('runnerSlots').textContent = `运行槽位 ${slots.length}/${data.settings.concurrency}` + (slots.length ? ' · ' + slots.map(j => `${j.user_id}: ${j.phase}`).join(' · ') : ' · 空闲');
+    [['statTotal','statBatchCount'],['statSucceeded','statWithKey'],['statRunning','statPending'],['statReview','statFailed'],['statProxySummary','statProxyRotation']].forEach(([value, detail]) => {
+      document.getElementById(value).closest('.telemetry-item').title = document.getElementById(detail).textContent;
+    });
     renderLogs(data.runner);
 
     // Batch select
@@ -1796,34 +1607,37 @@ async function loadOverview(populateForm = false) {
   }
 }
 
+function setSegments(options, selected) {
+  Object.entries(options).forEach(([id, value]) => {
+    const button = document.getElementById(id);
+    button.classList.toggle('selected', value === selected);
+    button.setAttribute('aria-pressed', String(value === selected));
+  });
+}
+
 function selectImportMode(mode) {
   document.getElementById('importMode').value = mode;
-  document.getElementById('modeCardRegister').classList.toggle('selected', mode === 'register');
-  document.getElementById('modeCardExisting').classList.toggle('selected', mode === 'existing_login');
+  setSegments({modeCardRegister: 'register', modeCardExisting: 'existing_login'}, mode);
   updateImportPreview();
 }
 
 function selectVerifyMode(mode) {
   document.getElementById('cfgVerifyMode').value = mode;
-  document.getElementById('vCardAuto').classList.toggle('selected', mode === 'auto_mailbox');
-  document.getElementById('vCardManual').classList.toggle('selected', mode === 'manual');
-  document.getElementById('vCardNone').classList.toggle('selected', mode === 'none');
+  setSegments({vCardAuto: 'auto_mailbox', vCardManual: 'manual', vCardNone: 'none'}, mode);
   if (mode === 'manual') document.getElementById('cfgHeadless').value = 'false';
 }
 
 function selectLoginVerifyMode(mode) {
   document.getElementById('cfgLoginVerifyMode').value = mode;
-  document.getElementById('lCardStrict').classList.toggle('selected', mode === 'strict_identity');
-  document.getElementById('lCardSelector').classList.toggle('selected', mode === 'selector_only');
-  document.getElementById('lCardToken').classList.toggle('selected', mode === 'url_or_token');
+  setSegments({lCardStrict: 'strict_identity', lCardSelector: 'selector_only', lCardToken: 'url_or_token', iLoginStrict: 'strict_identity', iLoginSelector: 'selector_only', iLoginToken: 'url_or_token'}, mode);
   document.getElementById('importLoginVerifyMode').value=mode;
 }
 
 function selectProxyRotateMode(mode) {
   document.getElementById('cfgProxyRotateMode').value = mode;
-  document.getElementById('pModeResult').classList.toggle('selected', mode === 'result_reached');
-  document.getElementById('pModeExec').classList.toggle('selected', mode === 'execution_count');
-  document.getElementById('pModeBoth').classList.toggle('selected', mode === 'both');
+  setSegments({pModeResult: 'result_reached', pModeExec: 'execution_count', pModeBoth: 'both'}, mode);
+  document.getElementById('proxyThresholdLabel').textContent = mode === 'execution_count' ? '执行阈值' : '结果阈值';
+  document.getElementById('cfgProxyExecLimit').disabled = mode !== 'both';
 }
 
 function populateSettingsForm(cfg) {
@@ -1936,23 +1750,23 @@ function runRegexTester() {
   const out = document.getElementById('regexTestResult');
   if (!pat) {
     out.style.color = 'var(--warning)';
-    out.textContent = '⚠️ 请输入正则表达式';
+    out.textContent = '请输入正则表达式';
     return;
   }
   try {
     const re = new RegExp(pat);
-    if(re.test('')) {out.style.color='var(--danger)';out.textContent='❌ 正则不能匹配空文本，请改用 .+ 或具体的结果格式。';return;}
+    if(re.test('')) {out.style.color='var(--danger)';out.textContent='正则不能匹配空文本';return;}
     const m = re.exec(sample);
     if (m) {
       out.style.color = 'var(--success)';
-      out.innerHTML = `✅ 匹配成功 ➔ <mark>${esc(m[0])}</mark><div style="margin-top:6px;color:var(--text-muted)">${esc(sample.slice(0,m.index))}<mark>${esc(m[0])}</mark>${esc(sample.slice(m.index+m[0].length))}</div>`;
+      out.innerHTML = `匹配成功 · <mark>${esc(m[0])}</mark><div style="margin-top:6px;color:var(--text-muted)">${esc(sample.slice(0,m.index))}<mark>${esc(m[0])}</mark>${esc(sample.slice(m.index+m[0].length))}</div>`;
     } else {
       out.style.color = 'var(--danger)';
-      out.textContent = '❌ 在示例文本中未匹配到结果';
+      out.textContent = '未匹配到结果';
     }
   } catch (e) {
     out.style.color = 'var(--danger)';
-    out.textContent = `❌ 正则语法错误: ${e.message}`;
+    out.textContent = `正则语法错误: ${e.message}`;
   }
 }
 
@@ -1974,13 +1788,13 @@ function renderCustomSteps(kind) {
         ['extract', '自定义提取结果'],
       ];
   const actionOptions = [
-    ['click', '点击元素 (click)'],
-    ['check', '勾选复选框 (check)'],
-    ['fill', '填写输入框 (fill)'],
-    ['wait_selector', '等待元素出现 (wait)'],
-    ['wait_ms', '等待毫秒数 (wait_ms)'],
-    ['goto', '跳转网址 (goto)'],
-    ['press', '键盘按键 (press)'],
+    ['click', '点击元素'],
+    ['check', '勾选复选框'],
+    ['fill', '填写输入框'],
+    ['wait_selector', '等待元素'],
+    ['wait_ms', '等待毫秒'],
+    ['goto', '跳转网址'],
+    ['press', '键盘按键'],
     ['extract_text', '提取元素文本为结果'],
     ['extract_storage', '提取LocalStorage为结果'],
     ['evaluate_js', '执行JS表达式'],
@@ -2114,13 +1928,13 @@ function updateImportPreview() {
     });
   } catch (err) { errorCount++; rows.push({lineNo:1,ok:false,error:err.message,kind:'CSV格式错误'}); }
 
-  summaryBadge.textContent = `共识别 ${rows.length} 行 · ✅ 有效 ${validCount} 条 · ❌ 异常 ${errorCount} 条`;
+  summaryBadge.textContent = `${rows.length} 行 · 有效 ${validCount} 条 · 异常 ${errorCount} 条`;
   summaryBadge.className = 'badge ' + (errorCount > 0 ? 'badge-danger' : (validCount > 0 ? 'badge-success' : 'badge-muted'));
   STATE.importPreview = {validCount,errorCount};
   document.getElementById('importSubmit').disabled = !validCount || errorCount > 0;
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">在上方粘贴账号后，此处将实时展示每一行的分列结果</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">暂无数据</td></tr>';
     return;
   }
 
@@ -2163,7 +1977,7 @@ function updateProxyPreview() {
   const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#'));
   let valid=0;
   if (!lines.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">粘贴代理后自动预览解析结果</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">暂无数据</td></tr>';
     badge.textContent='0 条';return;
   }
   tbody.innerHTML = lines.slice(0, 20).map((line, idx) => {
@@ -2270,7 +2084,7 @@ async function saveAllConfig() {
       },
     };
     await api('/api/config', { method: 'POST', body: JSON.stringify(payload) });
-    showToast('✅ 配置已保存，下次启动任务使用新流程。');
+    showToast('配置已保存，下次启动任务使用新流程。');
     await loadOverview(true);
   } catch (err) {
     showToast(err.message, true);
@@ -2281,7 +2095,7 @@ async function resetFlowDefaults() {
   if (!confirm('恢复官方流程会覆盖尚未保存的流程修改，确定恢复吗？')) return;
   try {
     await api('/api/config/reset-defaults', { method: 'POST', body: '{}' });
-    showToast('✅ 已恢复 Agnes 官方默认流程！');
+    showToast('已恢复 Agnes 官方默认流程');
     await loadOverview(true);
   } catch (err) {
     showToast(err.message, true);
@@ -2331,7 +2145,7 @@ function renderJobsTable() {
   });
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding: 26px;">当前筛选下暂无账号记录（可点击左侧“2. 批量导号与核验”导入账号）</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted);padding:40px;">暂无匹配任务 <button class="btn btn-secondary btn-sm" onclick="switchTab(\'import\',document.getElementById(\'nav-import\'))">导入账号</button></td></tr>';
     document.getElementById('jobsPagination').textContent='没有匹配的任务';updateFloatingBulkBar();return;
   }
 
@@ -2347,17 +2161,17 @@ function renderJobsTable() {
       <td class="mono">
         <div style="display:flex; align-items:center; gap:6px;">
           <span>${esc(show ? secret.email : j.email)}</span>
-          <button class="copy-chip" data-copy="email" aria-label="复制邮箱">📋</button>
+          <button class="copy-chip" data-copy="email" aria-label="复制邮箱">复制</button>
         </div>
         <div style="font-size:11px; color:var(--text-muted);">${esc(j.user_id)} · ${esc(j.batch)}</div>
       </td>
       <td>${stateBadge(j.state, j.state_label)}</td>
       <td class="mono" style="font-size:12px;">${esc(j.phase)} (尝试:${j.attempts})</td>
       <td class="mono secret-cell">
-        <button class="copy-chip" data-copy="agnes_password" aria-label="复制平台密码">${show ? esc(secret.agnes_password || '未设置') : '••••••'} 📋</button>
+        <button class="copy-chip" data-copy="agnes_password" aria-label="复制平台密码">${show ? esc(secret.agnes_password || '未设置') : '••••••'}</button>
       </td>
       <td class="mono secret-cell">
-        ${j.has_key ? `<button class="copy-chip" data-copy="api_key" aria-label="复制最终结果">${show ? esc(secret.api_key || '结果已确认') : '••••••（已获取）'} 📋</button>` : '<span style="color:var(--text-muted)">未获取</span>'}
+        ${j.has_key ? `<button class="copy-chip" data-copy="api_key" aria-label="复制最终结果">${show ? esc(secret.api_key || '结果已确认') : '••••••（已获取）'}</button>` : '<span style="color:var(--text-muted)">未获取</span>'}
       </td>
       <td class="mono" style="font-size:12px;">${esc(j.proxy_id || '-')}</td>
       <td style="max-width:220px;">
@@ -2366,9 +2180,9 @@ function renderJobsTable() {
       </td>
       <td>
         <div class="btn-row">
-          <button class="btn btn-primary btn-sm" data-job-action="verify">验证登录</button>
+          <button class="btn btn-ghost btn-sm" data-job-action="verify">核验</button>
           <button class="btn btn-secondary btn-sm" data-reveal-row>${show ? '隐藏' : '显示'}</button>
-          <button class="btn btn-secondary btn-sm" data-details>详情 / 改密</button>
+          <button class="btn btn-ghost btn-sm" data-details>详情</button>
         </div>
       </td>
     </tr>
@@ -2434,7 +2248,7 @@ async function batchSelectedAction(action) {
         method: 'POST',
         body: JSON.stringify({ action: 'verify_batch', batch_id: batch, job_ids: ids }),
       });
-      showToast(`🔐 已启动 ${ids.length} 个选中账号的批量登录验证！`);
+      showToast(`已启动 ${ids.length} 个选中账号的登录核验`);
     } else {
       await api('/api/jobs/action', {
         method: 'POST',
@@ -2445,7 +2259,7 @@ async function batchSelectedAction(action) {
           confirmed_not_created: action === 'requeue',
         }),
       });
-      showToast(`✅ 已完成 ${ids.length} 个选中账号的批量操作！`);
+      showToast(`已完成 ${ids.length} 个账号的批量操作`);
     }
     clearJobSelection();
     await refreshAll();
@@ -2462,7 +2276,7 @@ async function jobAction(jobId, action) {
       method: 'POST',
       body: JSON.stringify({ action, job_id: jobId, confirmed_not_created: action === 'requeue' }),
     });
-    showToast(res.message || '✅ 操作完成！');
+    showToast(res.message || '操作完成');
     await refreshAll();
     if (STATE.activeDrawerJobId === jobId) {
       await openJobDrawer(jobId);
@@ -2488,9 +2302,9 @@ async function openJobDrawer(jobId) {
   ['drawerApiKey','drawerAgnesPwd','drawerMailboxPwd'].forEach(id=>document.getElementById(id).type='password');
 
   document.getElementById('drawerQuickActions').innerHTML = `
-    <button class="btn btn-primary btn-sm" onclick="jobAction('${jobId}', 'verify')">🔐 立即验证此账号登录 & 拿结果</button>
-    <button class="btn btn-secondary btn-sm" onclick="jobAction('${jobId}', 'check_mailbox')">📬 测试邮箱收码连接</button>
-    <button class="btn btn-secondary btn-sm" onclick="jobAction('${jobId}', 'requeue')">♻️ 重置为重新注册</button>
+    <button class="btn btn-secondary btn-sm" onclick="jobAction('${jobId}', 'verify')">核验账号</button>
+    <button class="btn btn-secondary btn-sm" onclick="jobAction('${jobId}', 'check_mailbox')">测试邮箱连接</button>
+    <button class="btn btn-ghost btn-sm" onclick="jobAction('${jobId}', 'requeue')">重新注册</button>
   `;
 
   document.getElementById('drawerBackdrop').style.display = 'block';
@@ -2545,7 +2359,7 @@ async function saveDrawerPassword() {
         mailbox_password: document.getElementById('drawerMailboxPwd').value,
       }),
     });
-    showToast(res.message || '✅ 密码已更新！');
+    showToast(res.message || '密码已更新');
     STATE.secrets.delete(STATE.activeDrawerJobId);
     document.getElementById('drawerAgnesPwd').value='';
     document.getElementById('drawerMailboxPwd').value='';
@@ -2592,7 +2406,7 @@ async function controlBatch(action) {
         limit: limitVal ? Number(limitVal) : null,
       }),
     });
-    showToast(res.message || `✅ 指令已发送: ${action}`);
+    showToast(res.message || '指令已发送');
     await refreshAll();
   } catch (err) {
     showToast(err.message, true);
@@ -2612,7 +2426,7 @@ function readImportFile(file) {
   reader.onload = () => {
     document.getElementById('importAccountsText').value = reader.result || '';
     updateImportPreview();
-    showToast(`📄 已读取文件: ${file.name}`);
+    showToast(`已读取文件: ${file.name}`);
   };
   reader.onerror=()=>showToast('文件读取失败，请重新选择。',true);
   reader.readAsText(file, 'utf-8');
@@ -2661,7 +2475,7 @@ async function submitImportAccounts() {
 function renderProxiesTable(proxies, poolCfg) {
   const tbody = document.getElementById('proxiesTableBody');
   if (!proxies || !proxies.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding: 22px;">代理池为空（当前使用本机直连），可在上方批量粘贴导入代理</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:22px;">暂无代理节点 · 本机直连</td></tr>';
     return;
   }
   tbody.innerHTML = proxies.map(p => {
@@ -2725,7 +2539,7 @@ async function submitImportProxies() {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    const msg = `✅ 成功导入 ${res.imported} 条代理节点！`;
+    const msg = `成功导入 ${res.imported} 条代理节点`;
     document.getElementById('proxyImportMsg').textContent = msg;
     showToast(msg);
     await refreshAll();
@@ -2753,13 +2567,13 @@ async function checkSingleProxy(proxyId) {
 
 async function checkAllProxies() {
   try {
-    showToast('⚡ 正在并发检测所有代理连通性与真实出口 IP...');
+    showToast('正在检测代理连通性与出口 IP…');
     const res = await api('/api/proxies/check', {
       method: 'POST',
       body: JSON.stringify({ proxy_id: 'all' }),
     });
     const healthy = (res.results || []).filter(r => r.status === 'HEALTHY').length;
-    showToast(`✅ 检测完成：${healthy} / ${(res.results || []).length} 条代理可用！`);
+    showToast(`检测完成：${healthy} / ${(res.results || []).length} 条代理可用`);
     await loadOverview(false);
   } catch (err) {
     showToast(err.message, true);
@@ -2773,7 +2587,7 @@ async function proxyAction(action, proxyId = null, enabled = true) {
       method: 'POST',
       body: JSON.stringify({ action, proxy_id: proxyId, enabled }),
     });
-    showToast('✅ 代理池操作已生效！');
+    showToast('代理池操作已生效');
     await loadOverview(false);
   } catch (err) {
     showToast(err.message, true);
@@ -2857,6 +2671,10 @@ function initSelectorHelpers() {
     box.innerHTML='<select aria-label="定位方式"><option value="default">官方默认</option><option value="text">按按钮/链接文字</option><option value="placeholder">按输入框提示词</option><option value="css">高级 CSS / Playwright</option><option value="none">跳过此步</option></select><input type="text" aria-label="定位内容" placeholder="输入按钮文字、提示词或 CSS" />';
     input.closest('.field').appendChild(box);
     const select=box.querySelector('select'), value=box.querySelector('input');
+    input.hidden=true;
+    const label=input.closest('.field').querySelector('label');
+    value.id=id+'Editor';
+    if(label) label.htmlFor=value.id;
     const update=()=>{input.value=select.value==='none'?'none':select.value==='default'?'':select.value==='text'?'text='+JSON.stringify(value.value):select.value==='placeholder'?'input[placeholder*='+JSON.stringify(value.value)+']':value.value;value.disabled=['none','default'].includes(select.value);};
     select.addEventListener('change',update);value.addEventListener('input',update);
     input.addEventListener('input',()=>{select.value='css';value.disabled=false;value.value=input.value;});
@@ -2874,50 +2692,42 @@ function syncSelectorHelpers() {
 }
 
 function initPipeline() {
-  const original=Array.from(document.querySelectorAll('#tab-flows .pipeline'));
-  const makeStep=(number,title,fields)=>{
-    const step=document.createElement('div');step.className='pipe-step';
-    step.innerHTML=`<div class="pipe-head"><div><span class="pipe-num">${number}</span><span class="pipe-title">${title}</span></div><span class="pipe-summary">点击配置 ▾</span></div>`;
-    const grid=document.createElement('div');grid.className='grid-3';
-    fields.forEach(id=>grid.appendChild(document.getElementById(id).closest('.field')));
-    step.appendChild(grid);return step;
-  };
-  const registration=[
-    makeStep(1,'访问注册入口页',['regEntryPath']),
-    makeStep(2,'点击切换注册',['regOpenSelector']),
-    makeStep(3,'填写邮箱与密码',['regEmailSelector','regPasswordSelector','regConfirmSelector']),
-    makeStep(4,'发送并填写验证码',['regSendReadySelector','regSendClickSelector','regCodeInputSelector']),
-    makeStep(5,'点击提交注册',['regSubmitSelector']),
-  ];
-  original[0].replaceChildren(...registration);original[0].dataset.flowKind='reg';
-  const extraction=original[1].querySelectorAll('.pipe-step')[1];
-  extraction.querySelector('.pipe-num').textContent='9';extraction.querySelector('.pipe-title').textContent='提取并保存最终结果';
-  const result=[makeStep(7,'进入最终结果页面',['keyNavSelector','keyTargetUrl']),makeStep(8,'触发创建目标项',['keyCreateSelector','keyNameSelector','keyNameTemplate','keyConfirmSelector']),extraction];
-  original[1].replaceChildren(...result);original[1].dataset.flowKind='key';
-  const loginGrid=document.getElementById('loginPath').closest('.grid-3');
-  const loginPipe=document.createElement('div');loginPipe.className='pipeline';loginPipe.dataset.flowKind='login';
-  const loginStep=document.createElement('div');loginStep.className='pipe-step';
-  loginStep.innerHTML='<div class="pipe-head"><div><span class="pipe-num">6</span><span class="pipe-title">登录账号与确认身份</span></div><span class="pipe-summary">点击配置 ▾</span></div>';
-  loginGrid.before(loginPipe);loginStep.appendChild(loginGrid);loginPipe.appendChild(loginStep);
-  const pipelines=Array.from(document.querySelectorAll('#tab-flows .pipeline'));
-  pipelines.forEach(pipeline=>{
-    const kind=pipeline.dataset.flowKind, stages=kind==='reg'?['before_open','before_fill','before_code','before_submit','after_submit']:kind==='login'?['before_submit']:['before_extract','after_create','extract'];
-    Array.from(pipeline.querySelectorAll('.pipe-step')).forEach((step,i)=>{
-      step.classList.add('collapsed');
-      const head=step.querySelector('.pipe-head');head.tabIndex=0;head.setAttribute('role','button');head.setAttribute('aria-expanded','false');
-      const toggle=()=>{step.classList.toggle('collapsed');head.setAttribute('aria-expanded',String(!step.classList.contains('collapsed')));};
-      head.addEventListener('click',toggle);head.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
-      const zone=document.createElement('div');zone.className='insert-zone';
-      zone.innerHTML=`<button class="btn btn-secondary btn-sm" onclick="addCustomStep('${kind}','${stages[i]}')">+ 在此插入自定义动作</button><div data-custom-kind="${kind}" data-custom-stage="${stages[i]}"></div>`;
-      step.after(zone);
+  document.querySelectorAll('#flowPipeline > .pipe-step').forEach((step,i)=>{
+    const kind=step.dataset.flowKind, stage=step.dataset.stage;
+    step.classList.add('collapsed');
+    const head=step.querySelector('.pipe-head'), body=step.children[1];
+    body.id='flowStepBody'+i;
+    head.tabIndex=0;head.setAttribute('role','button');head.setAttribute('aria-expanded','false');head.setAttribute('aria-controls',body.id);
+    const toggle=()=>{step.classList.toggle('collapsed');head.setAttribute('aria-expanded',String(!step.classList.contains('collapsed')));};
+    head.addEventListener('click',toggle);head.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+    const zone=document.createElement('div');zone.className='insert-zone';
+    zone.innerHTML=`<button class="btn btn-ghost btn-sm" aria-label="+ 在此插入自定义动作" title="在此插入自定义动作" onclick="addCustomStep('${kind}','${stage}')">+ 动作</button><div data-custom-kind="${kind}" data-custom-stage="${stage}"></div>`;
+    step.after(zone);
+  });
+}
+
+function initSegmentedControls() {
+  document.querySelectorAll('.segmented').forEach(group=>{
+    group.addEventListener('keydown',event=>{
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+      const buttons=Array.from(group.querySelectorAll('button'));
+      const current=buttons.indexOf(document.activeElement);
+      if(current<0) return;
+      event.preventDefault();
+      const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(current+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
+      buttons[next].focus();buttons[next].click();
     });
   });
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
   const savedTheme=localStorage.getItem('agnes-theme');if(['dark','light'].includes(savedTheme)) document.documentElement.dataset.theme=savedTheme;
-  initSelectorHelpers();initPipeline();updateImportPreview();
-  const pager=document.createElement('div');pager.id='jobsPagination';pager.className='btn-row';pager.style.marginTop='12px';document.getElementById('jobsTableBody').closest('.table-wrap').after(pager);
+  initSelectorHelpers();initPipeline();initSegmentedControls();updateImportPreview();
+  if(localStorage.getItem('agnes-terminal-open')==='true') toggleTerminal();
+  document.getElementById('nav-dashboard').setAttribute('aria-current','page');
+  new ResizeObserver(syncTerminalHeight).observe(document.getElementById('terminalDock'));
+  syncTerminalHeight();
+  const pager=document.createElement('div');pager.id='jobsPagination';pager.className='btn-row';document.getElementById('jobsTableBody').closest('.table-wrap').after(pager);
   const drop=document.getElementById('importDropZone');
   drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dragging');});
   drop.addEventListener('dragleave',()=>drop.classList.remove('dragging'));
