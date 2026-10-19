@@ -614,16 +614,16 @@ WEB_HTML = r"""<!DOCTYPE html>
   .terminal-toggle::after { content: '展开 ↑'; margin-left: auto; color: #6f7e99; font-size: 10px; }
   .terminal-toggle[aria-expanded=true]::after { content: '收起 ↓'; }
   .terminal-body { padding: 0 14px 12px; height: 232px; display: flex; flex-direction: column; }
-  .terminal-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #ffffff12; padding: 8px 0; }
+  .terminal-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #ffffff12; padding: 8px 0; flex-shrink: 0; }
   .terminal-toolbar .btn { color: #aeb7ca; }
-  #runnerSlots { margin-right: auto; overflow-wrap: anywhere; }
+  #runnerSlots { margin-right: auto; overflow-wrap: anywhere; flex: 1 1 200px; min-width: 0; max-height: 54px; overflow-y: auto; overscroll-behavior: contain; }
   .log-box {
     background: var(--bg-terminal);
     padding: 6px 0;
     font-family: Consolas, monospace;
     font-size: 12px;
     flex: 1;
-    min-height: 0;
+    min-height: 80px;
     overflow-y: auto;
     color: #93c5fd;
     white-space: pre-wrap;
@@ -1308,7 +1308,7 @@ WEB_HTML = r"""<!DOCTYPE html>
     <button id="terminalToggle" class="terminal-toggle" aria-label="运行终端" aria-expanded="false" aria-controls="terminalBody" onclick="toggleTerminal()">运行终端<span id="terminalSlotSummary" class="mono">0 个运行槽位</span></button>
     <div id="terminalBody" class="terminal-body" hidden>
       <div class="terminal-toolbar">
-        <span id="runnerSlots" class="mono"></span>
+        <span id="runnerSlots" class="mono" tabindex="0" role="region" aria-label="运行槽位"></span>
         <label class="checkbox-row"><input id="logAutoScroll" type="checkbox" checked />自动滚动</label>
         <button class="btn btn-ghost btn-sm" onclick="clearLogs()" aria-label="清空当前日志视图">清空日志</button>
       </div>

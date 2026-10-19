@@ -771,6 +771,52 @@ def test_iss005_global_terminal_state_survives_navigation_polling_and_reload(bro
     expect_terminal_state(page, False)
 
 
+@pytest.mark.parametrize("theme", ["dark", "light"])
+@pytest.mark.parametrize("width", [1440, 768, 360])
+def test_iss005_fifty_running_slots_keep_logs_and_controls_accessible(
+    workbench, browser_page, width, theme,
+):
+    controller, _, _ = workbench
+    controller.update_config({"concurrency": 50})
+    import_demo(controller, "terminal-busy", "\n".join(
+        f"busy{index:02d}@example.com----DemoPass{index:02d}!" for index in range(50)
+    ))
+    # Simulate active slots in this fixture's database, without launching real workers.
+    with sqlite3.connect(controller.get_settings().database) as db:
+        db.execute("UPDATE registration_jobs SET state='RUNNING', phase='EMAIL_REQUESTED'")
+    for index in range(50):
+        controller.log(f"并发验收日志 {index:02d}")
+    page = browser_page
+    page.set_viewport_size({"width": width, "height": 1000})
+    if page.locator("html").get_attribute("data-theme") != theme:
+        page.get_by_role("button", name="🌓 切换深浅主题", exact=True).click()
+    refresh_workbench(page)
+    page.wait_for_function("STATE.overview.runner.slots.length === 50")
+    page.locator("#terminalToggle").click()
+    expect(page.locator("#terminalSlotSummary")).to_have_text("50/50 槽位")
+    capture_workbench(page, "terminal-busy", workbench_measurements(page))
+    logs = page.locator("#runnerLogsBox")
+    assert logs.evaluate("element => element.clientHeight") >= 80
+    slots = page.locator("#runnerSlots")
+    assert slots.evaluate("element => element.scrollHeight > element.clientHeight")
+    assert slots.evaluate("element => getComputedStyle(element).overflowY") == "auto"
+    slots.press("End")
+    page.wait_for_function("document.getElementById('runnerSlots').scrollTop > 0")
+    terminal = page.locator("#terminalBody").bounding_box()
+    for control in (page.locator("#logAutoScroll"), page.get_by_role(
+        "button", name="清空当前日志视图", exact=True,
+    ), logs):
+        rect = control.bounding_box()
+        assert terminal["y"] <= rect["y"]
+        assert rect["y"] + rect["height"] <= terminal["y"] + terminal["height"]
+    page.locator("#logAutoScroll").uncheck()
+    page.get_by_role("button", name="清空当前日志视图", exact=True).click()
+    expect(logs).to_contain_text("已清空")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    page.locator("#terminalToggle").click()
+    expect_terminal_state(page, False)
+
+
 @pytest.mark.parametrize("width", [1440, 768, 360])
 def test_iss005_terminal_real_logs_pause_follow_clear_and_keep_audit(
     workbench, browser_page, width,

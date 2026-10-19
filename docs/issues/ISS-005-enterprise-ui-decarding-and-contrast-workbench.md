@@ -101,10 +101,10 @@
 
 - **已完成开发、整合与自动化验收（2026-10-19）**，按方案 A 交付至 `feat/modern-web-workbench`，整体关联 [PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，保持待评审、不自动合并；最终产品视觉由用户评审。
 - **布局**：196px 侧栏、单行指令栏、36px 五指标带与 2px 多段进度线；抬升的全幅任务表为主面，深浅主题分别使用独立表面对比度令牌。1440×1000 实测表格滚动区为 809.5px，占队列工作区 **91.37%**、视口高度 **80.95%**。表头固定、长表仅在表格内部横向滚动。
-- **终端**：槽位与日志统一停靠底部，默认折叠为 34px；展开状态在切换视图、轮询和刷新后保留。自动跟随、暂停滚动、清空视图均回归；清空不会删除后端日志或审计时间线。批量操作栏随终端高度避让。
+- **终端**：槽位与日志统一停靠底部，默认折叠为 34px；展开状态在切换视图、轮询和刷新后保留。槽位区限制为 54px 并独立滚动、可键盘访问，日志保留至少 80px；50 个运行槽位不会挤没日志和操作按钮。自动跟随、暂停滚动、清空视图均回归；清空不会删除后端日志或审计时间线。批量操作栏随终端高度避让。
 - **组件与文案**：删除教程横幅、卡片描述、教学前缀及标题/标签中的底层字段名；清除装饰性 Emoji，旧按钮无障碍名称保持兼容。导入模式、验证码、两处同步登录核验标准、代理策略统一为五组原生按钮分段控制器，支持鼠标、Tab、空格、Enter、方向键与 Home/End。流程直接维护一个连续的九节点手风琴列表，保留节点插入、定位助手、动作排序/禁用及正则预览。
 - **兼容与边界**：原有静态 DOM id **152/152 保留**，既有选择器与 `data-*` 操作钩子继续可用；登录标准兼容旧 select 并双向同步。未改动数据库 Schema、DPAPI、调度器或 Web API 契约，未读取真实账号、生产库或外部邮箱/代理。
-- **验证**：`uv run pytest` **236 passed**；`uv run ruff check` **All checks passed**；`git diff --check` 通过。`tests/test_workbench_acceptance.py` 共 **58 项**，其中 ISS-005 新增 **47 项**，包含五视图 × 三视口 × 双主题的 30 组布局，另有填充预览/展开节点、分段键盘操作、登录标准持久化与终端回归。浏览器为 **Chrome 155.0.8059.80**，各视图均满足 `scrollWidth <= innerWidth`，同时检查面板边界与内部滚动，避免只隐藏页面溢出。
-- **截图证据**：保留于 `%LOCALAPPDATA%\Temp\opencode\`，30 张主矩阵截图命名 `agnes-workbench-{dashboard,import,flows,proxies,delivery}-{1440,768,360}-{dark,light}.png`；另有 18 张 `agnes-workbench-{import,proxies,flows}-expanded-{宽度}-{主题}.png` 和 3 张 `agnes-workbench-terminal-{宽度}-dark.png`。同名 JSON 保存 Chrome 版本、视口及实际尺寸；截图遮蔽本机配置路径，数据全部虚构。
+- **验证**：`uv run pytest` **242 passed**；`uv run ruff check` **All checks passed**；`git diff --check` 通过。`tests/test_workbench_acceptance.py` 共 **64 项**，其中 ISS-005 新增 **53 项**，包含五视图 × 三视口 × 双主题的 30 组布局，另有填充预览/展开节点、分段键盘操作、登录标准持久化与终端回归。补充审查指出的多槽位挤压问题已通过旧代码失败复现、新代码六组 Chrome 回归及独立只读复核。浏览器为 **Chrome 155.0.8059.80**，各视图均满足 `scrollWidth <= innerWidth`，同时检查面板边界与内部滚动，避免只隐藏页面溢出。
+- **截图证据**：保留于 `%LOCALAPPDATA%\Temp\opencode\`，30 张主矩阵截图命名 `agnes-workbench-{dashboard,import,flows,proxies,delivery}-{1440,768,360}-{dark,light}.png`；另有 18 张 `agnes-workbench-{import,proxies,flows}-expanded-{宽度}-{主题}.png`、3 张 `agnes-workbench-terminal-{宽度}-dark.png`，以及 6 张 50 槽位场景 `agnes-workbench-terminal-busy-{宽度}-{主题}.png`。同名 JSON 保存 Chrome 版本、视口及实际尺寸；截图遮蔽本机配置路径，数据全部虚构。
 - **复验**：PowerShell 设置 `$env:AGNES_UI_SCREENSHOT='1'` 后运行 `uv run pytest tests/test_workbench_acceptance.py`，即在上述目录更新截图与尺寸证据；日常启动仍为双击 `启动Web界面.cmd` 或 `uv run agnes --config config.local.toml web`。
 - **收尾**：测试 HTTP 服务、Chrome 上下文/进程与 CLI 子进程均由 fixture 关闭；没有新建临时工作树或常驻服务。保留主工作区、原有本地配置/数据库/凭证及验收截图，不上传真实资料。无已知开发阻碍；既有 Excel 本机可选运行库限制与真实网站可用性边界不变。
