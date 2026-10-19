@@ -1,5 +1,7 @@
 # ISS-005：重构企业级高密度工作台界面（去卡片化、去说教文案、对比度分区与方案 A 布局）
 
+> 2026-10-19 后续界面以 [ISS-006](./ISS-006-script-runtime-workbench-epic.md) 和 [ISS-011](./ISS-011-simple-runtime-workbench.md) 为准。本文保留历史视觉交付；简洁高密度的设计可复用，但固定 Agnes 品牌、九节点流程和旧 DOM 保留要求不再限制新工作台。
+
 ## 目标与范围
 
 ### 当前问题

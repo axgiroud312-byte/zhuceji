@@ -1,5 +1,7 @@
 # ISS-002：实现可视化注册流程与最终结果提取流程编排器（参考 Automa / n8n 步骤流）
 
+> 2026-10-19 已被产品方向更新取代：仅保留历史记录，不再扩展流程编辑器。新产品使用外部编写、导入执行的网站脚本，见 [ISS-006](./ISS-006-script-runtime-workbench-epic.md) 与 [ISS-007](./ISS-007-importable-site-scripts.md)；旧界面收敛见 [ISS-011](./ISS-011-simple-runtime-workbench.md)。
+
 ## 目标与范围
 
 ### 当前问题
