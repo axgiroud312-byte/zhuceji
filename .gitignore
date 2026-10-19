@@ -42,3 +42,4 @@ test-results/
 # One-off production recovery scripts stay local.
 /rescue_misjudged.py
 /tools/rescue_misjudged.py
+/docs/生产执行入口.md

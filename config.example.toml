@@ -1,0 +1,30 @@
+mode = "mock"
+database = "data/agnes.db"
+vault = "data/credentials.dpapi"
+concurrency = 1
+per_minute = 1
+max_attempts = 3
+headless = false
+browser_channel = "chrome"
+verification_timeout_seconds = 120
+manual_verification = false
+identity_navigation_selector = ""
+account_identity_selector = ""
+authenticated_selector = ""
+proxy_required = false
+
+[approval]
+reference = ""
+concurrency = 1
+per_minute = 1
+proxies_allowed = false
+
+[key_flow]
+enabled = false
+navigation_selector = ""
+create_selector = ""
+name_selector = ""
+confirm_selector = ""
+value_selector = ""
+copy_selector = ""
+pattern = "sk-[A-Za-z0-9_-]{16,}"

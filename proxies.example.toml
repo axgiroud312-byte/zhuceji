@@ -1,0 +1,6 @@
+[[proxies]]
+id = "approved-proxy-1"
+server = "http://127.0.0.1:8080"
+provider = "填写获准的代理提供商"
+username_env = "AGNES_PROXY_USERNAME"
+password_env = "AGNES_PROXY_PASSWORD"
