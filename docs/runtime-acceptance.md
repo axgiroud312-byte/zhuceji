@@ -65,4 +65,6 @@ uv run python tools/runtime_e2e.py
 
 双击根目录 `启动Web界面.cmd`，打开 `http://127.0.0.1:8765`。快速试用可在脚本库导入 `examples/script-demo-accounts.json`；真实站点先在设置中保存并检查资源，再选择 Agnes。脚本格式见 [script-authoring.md](script-authoring.md)。
 
-本轮临时开发工作树在完成推送和 PR 更新后清理；保留主工作区、用户配置/数据、迁移恢复材料、远端 PR 分支以及上述截图/验收报告。测试 Web、浏览器、CLI 子进程由测试关闭，试用服务通过启动脚本按需打开。
+实际收尾：完成推送并更新 PR #1 后，已删除本轮 `runtime-resources`、`runtime-ui`、`runtime-review` 三个临时工作树及其本地临时分支；删除首轮已被替代的 E2E 目录、最终 E2E 的虚构数据库/Vault/配置及 PR 文案中转文件。已复核工作树列表只剩主工作区，临时工作树路径不再存在。
+
+保留主工作区、用户配置/数据、迁移恢复材料、远端 PR 分支，以及最终 E2E 的六张截图、`report.json`、脱敏 `masked.csv` 和 18 张 UI mock 截图。测试 Web、浏览器、CLI 子进程由测试关闭；8765 未保留常驻试用服务，通过启动脚本按需打开。
