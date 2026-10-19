@@ -60,3 +60,4 @@
 - 已修复手动换轮在各节点 generation 不同时仍选中原节点的问题；结果/执行/双阈值及动态 Session 刷新已覆盖。提交前 IP/网络故障切下一个健康节点，提交后保留原绑定先核查，不重复注册。
 - 已完成 `ProxyMeta.latency_ms` 的 nullable 增量迁移（`0002_proxy_latency.py`）、代理内联认证 DPAPI 加密与旧版显式重导入升级、恢复任务时保护健康检查和其他批次租约；均只在临时数据库验收，不主动改动现有生产库。
 - 验收通过：代理/调度器初验 **89 passed**，覆盖 DB/WAL 无明文账密、旧库迁移、租约超时、故障切换与三种阈值；Web `test_iss004_proxy_preview_import_policy_rotate_reset` 验证预览、并发测速/IP/延迟、换轮与重置。已纳入全量 **187 passed**，最终代理与工作台专项 **90 passed**，Ruff 通过；详见 ISS-000。
+- 公开交付：[PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，与 ISS-000～004 整体提交，待评审、未自动合并；发布回归全量 189 项通过。

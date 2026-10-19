@@ -64,3 +64,4 @@
 - 已补齐实际执行器各阶段、禁用跳过、免验证码、none 语义和全部动作校验；配置同目录临时文件 + fsync + 原子替换，顺序与 enabled 持久化，数据库/Vault 路径不漂移。
 - 已完善 DOM/网络/剪贴板/Storage/自定义结果来源，提交未知恢复不重新创建目标；Token 模式明确为可信站内跳转与非空 Token 同时成立。
 - 验收通过：新增 `tests/test_flow_workbench.py` 的 67 项本地配置与 Playwright 用例，连同相关既有测试 75 项通过；Web 端 `test_iss002_pipeline_selector_steps_regex_and_reset` 验证九节点、转义选择器、排序/禁用持久化、实时正则与还原（包括清除旧人工验证码标志）。已纳入全量 **187 passed**、最终专项 **90 passed**，Ruff 通过；详见 ISS-000。
+- 公开交付：[PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，与 ISS-000～004 整体提交，待评审、未自动合并；发布回归全量 189 项通过。

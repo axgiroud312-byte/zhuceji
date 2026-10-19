@@ -60,3 +60,4 @@
 - 已完成 460px 详情抽屉、审计时间线、邮箱测试与本地 DPAPI 改密；支持遮罩/ESC 关闭、焦点返回和键盘焦点约束。
 - 已完成无批次友好引导、运行中变更保护、重新注册确认及已确认账号防重复注册；增加同源 JSON/本机 Host 检查与 HTML 转义。
 - 验收通过：`tests/test_workbench_acceptance.py` 中 `test_iss001_*`、API 安全/备份及选中任务精确核验用例；桌面/768px/360px 布局和真实剪贴板均使用本地 Chrome 检查。已纳入全量 **187 passed**、最终专项 **90 passed**，Ruff 通过；详见 ISS-000。
+- 公开交付：[PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，与 ISS-000～004 整体提交，待评审、未自动合并；发布回归全量 189 项通过。

@@ -74,4 +74,6 @@
 - **验证结果**：`uv run pytest` 全量 **187 passed**；截图验收全量复跑同样 **187 passed**。最后的恢复默认验证码联动、已完成账号主动重验及代理/界面回归 **90 passed**；`uv run ruff check` **All checks passed**。原有 7 处 Ruff 长行仅作等价换行，不改变生产隔离归档逻辑。
 - 浏览器验收覆盖真实剪贴板、跨刷新/搜索多选、单行显隐、抽屉改密、九节点排序/禁用持久化、正则预览、拖拽导入、代理测速/IP/延迟/换轮和 360/768/1440px 布局；CLI 子进程启动与退出亦已验证。执行器使用本地拦截页面、受控网络响应和临时 SQLite/DPAPI，未调用真实生产账号、邮箱或外部代理服务。
 - 试用入口：双击 `启动Web界面.cmd` 或运行 `uv run agnes --config config.local.toml web`。使用说明已同步 `README.md`、`docs/操作说明.md`、`docs/状态规则.md`。无已知开发阻碍；真实网站页面和授权邮箱/代理的可用性仍以用户环境实测为准，不把本地模拟结果冒充真实注册成果。
-- 交付/保留：已按用户后续授权初始化 Git 仓库，默认分支 `main`，完整代码在 `feat/modern-web-workbench` 分支提交公开 PR。测试 Web/CLI/浏览器进程均按 fixture 关闭；验收截图保留在 `%LOCALAPPDATA%\Temp\opencode\agnes-workbench-{desktop,flows,import,proxies}.png`，临时数据库由 pytest 临时目录管理。主工作区、既有配置、凭证、数据和生产归档保留在本机，公开提交排除真实资料、私有生产说明及一次性救援脚本。
+- 公开交付：[zhuceji（注册机）](https://github.com/axgiroud312-byte/zhuceji)，默认分支 `main`；完整代码与 ISS-000～004 的交付统一在 [PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)，分支 `feat/modern-web-workbench`，保持待评审、未自动合并。
+- 公开发布回归：`uv run pytest` **189 passed**（增加显式迁移输入保护），`uv run ruff check` **All checks passed**，`node --check tools/export_workbook.mjs` 通过；57 个版本控制文件的禁止路径/凭证形态/私人绝对路径扫描复核为 0 项。公开版移除了桌面档案默认输入，并明确 Excel 可选运行库限制。
+- 保留与清理：测试 Web/CLI/浏览器进程均按 fixture 关闭；验收截图保留在 `%LOCALAPPDATA%\Temp\opencode\agnes-workbench-{desktop,flows,import,proxies}.png`，临时数据库由 pytest 临时目录管理。没有创建临时工作树；主工作区、既有配置、凭证、数据和生产归档保留在本机，公开提交排除真实资料、私有生产说明及一次性救援脚本。
