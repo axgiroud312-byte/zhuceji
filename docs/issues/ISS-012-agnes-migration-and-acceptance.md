@@ -24,4 +24,8 @@
 
 ## 当前进展
 
-待开发；负责人、实施分支和 PR 待填写。仅创建任务不表示迁移、真实注册或总目标已经验收。
+- 迁移、Agnes 适配与受控整体验证完成，待 PR/用户验收；外部真实服务实测仍待完成，不能标为已真实注册。
+- 负责人：Astra / 资源执行 Agent；分支 `feat/modern-web-workbench`；[整体 PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)。
+- Agnes 作为普通 API v1 内置脚本，复用原网站逻辑；框架运行/存储无固定 API Key 列。完整 ScriptRuntime 经真实 Chromium + 本地代理 + 受控 Graph/注册站取得声明结果，提交端核对 durable marker 先于请求，单任务不重复注册。
+- 旧表加法迁移为 ARCHIVED 历史，备份 SQLite/Vault，保留原凭证引用/账号/代理/批次。虚构副本逐行比对、故障回滚、重复迁移、解密结果、中断不排队已验证；外部旧配置只读资源复制逐字节核对源文件未变。
+- README、操作说明、状态规则和脚本编写文档已更新；详细结果、截图、模拟与真实边界、恢复材料与清理记录见 [整体验收](../runtime-acceptance.md)。

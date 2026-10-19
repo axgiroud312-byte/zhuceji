@@ -24,4 +24,6 @@
 
 ## 当前进展
 
-待开发；负责人、实施分支和 PR 待填写。现有 Adapter 是调查起点，尚不能视为已具备脚本导入能力。
+- 开发与契约验证完成，待整体 PR 评审。负责人：Astra；分支 `feat/modern-web-workbench`；[整体 PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)。
+- 最终格式：单文件 JSON `{manifest, source}`，API v1；导入只做 AST/入口/依赖校验，执行为受信任本机 Python、每任务独立 globals，不是安全沙箱；不自动安装依赖。字段、资源、日志和清理接口见 [共享契约](../runtime-contract.md) / [AI 编写说明](../script-authoring.md)。
+- 验证覆盖导入不执行、无效/缺依赖/重复版本拒绝、坏更新保留旧版、新旧版本固定、异常清理、重启读取；两个不同输出的示例均已实际运行。完整证据见 [整体验收](../runtime-acceptance.md)。

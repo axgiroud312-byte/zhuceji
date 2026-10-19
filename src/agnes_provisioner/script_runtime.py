@@ -106,7 +106,7 @@ class ScriptRuntime:
 
     def overview(self):
         batches = self.store.batches()
-        active = next((b for b in batches if b["state"] == "RUNNING"), None)
+        active = next((b for b in batches if b["state"] in {"RUNNING", "STOPPING"}), None)
         return {"scripts": self.store.scripts(), "resources": self.resources.list(),
                 "batches": batches, "active": active}
 
@@ -216,6 +216,11 @@ class ScriptRuntime:
                         ctx.register_secret(values.get(field["key"]))
             self.store.save_results(task_id, manifest["result_fields"], values)
             state, message = "SUCCEEDED", "执行完成，结果已保存。"
+        except asyncio.CancelledError:
+            state = "UNKNOWN" if ctx and ctx.submitted else "CANCELLED"
+            message = "执行被中断；已提交结果待核查，不会自动重新执行。" if state == "UNKNOWN" \
+                else "执行被取消，未提交注册。"
+            raise
         except ScriptFailure as error:
             state = "UNKNOWN" if ctx and ctx.submitted else "FAILED"
             message = ctx.clean(str(error)) if ctx else "资源或脚本准备失败。"
@@ -233,13 +238,13 @@ class ScriptRuntime:
                 try:
                     if callable(namespace.get("close")):
                         await asyncio.wait_for(namespace["close"](ctx), timeout=15)
-                except Exception:
+                except (Exception, asyncio.CancelledError):
                     ctx.log("脚本清理异常，框架将释放资源。", "cleanup", "warning")
             if lease:
                 try:
                     await self.resources.release(lease, submitted=bool(ctx and ctx.submitted),
                                                  succeeded=state == "SUCCEEDED")
-                except Exception:
+                except (Exception, asyncio.CancelledError):
                     # Keep task outcome, preserve durable submission markers and recover leases.
                     self.store.event(batch["id"], task_id, "cleanup", "warning",
                                      "资源释放异常，将在下次启动前恢复租约。")

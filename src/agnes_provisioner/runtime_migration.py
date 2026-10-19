@@ -61,10 +61,13 @@ def migrate_legacy(store, *, fail_after=None):
                 site_id, "ARCHIVED", len(jobs), min(r["created_at"] for r in jobs),
                 encode({"legacy_batch": old_batch}), encode(LEGACY_FIELDS), "",
             ))
-            for index, row in enumerate(jobs, 1):
+            index = db.execute("SELECT COALESCE(MAX(ordinal),0) FROM rt_tasks WHERE batch_id=?",
+                               (batch_id,)).fetchone()[0]
+            for row in jobs:
                 task_id = "legacy-" + row["id"]
                 if task_id in existing:
                     continue
+                index += 1
                 record = store.vault.get(row["secret_ref"]) if row["secret_ref"] else {}
                 result = {"email": row["email"]}
                 if record.get("agnes_password"):
@@ -93,6 +96,8 @@ def migrate_legacy(store, *, fail_after=None):
                 imported += 1
                 if fail_after is not None and imported >= fail_after:
                     raise RuntimeError("INJECTED_MIGRATION_FAILURE")
+            db.execute("UPDATE rt_batches SET count=(SELECT COUNT(*) FROM rt_tasks "
+                       "WHERE batch_id=?) WHERE id=?", (batch_id, batch_id))
         # Add-only Vault write precedes SQLite commit. A failed commit leaves harmless new refs;
         # retry overwrites those same deterministic refs, never the original credentials.
         store.vault.set_many(new_records)

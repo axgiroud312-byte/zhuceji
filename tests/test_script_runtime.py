@@ -325,3 +325,61 @@ async def run(ctx):
     batch = start(runtime, pkg, count=3)
     wait(runtime)
     assert [r["results"]["credits"] for r in runtime.store.tasks(batch["id"])["tasks"]] == [1, 1, 1]
+
+
+def test_submitted_cancellation_and_concurrent_peers_remain_unknown(runtime):
+    pkg = package("tokens")
+    pkg["source"] = """
+import asyncio
+async def run(ctx):
+    ctx.mark_submitted()
+    if ctx.index == 1:
+        await asyncio.sleep(0.1)
+        raise asyncio.CancelledError()
+    await asyncio.sleep(10)
+async def close(ctx):
+    ctx.log('cancel cleanup', stage='cleanup')
+"""
+    batch = start(runtime, pkg, count=4, concurrency=2)
+    wait(runtime)
+    tasks = runtime.store.tasks(batch["id"])
+    assert tasks["batch"]["state"] == "INTERRUPTED"
+    assert [t["state"] for t in tasks["tasks"]] == [
+        "UNKNOWN", "UNKNOWN", "CANCELLED", "CANCELLED"]
+    assert all(t["message"] for t in tasks["tasks"])
+    assert len(runtime.resources.submissions) == len(runtime.resources.released) == 2
+    assert all(released[1] for released in runtime.resources.released)
+
+
+def test_incremental_legacy_archive_keeps_ordinals_and_updates_count(settings):
+    storage = Storage(settings.database)
+    storage.initialize()
+    storage.close()
+    store = RuntimeStore(settings.database, Vault(settings.vault))
+    with store.connect() as db:
+        db.execute("INSERT INTO batches VALUES ('old','agnes','READY','',0,1)")
+
+    def add_job(number):
+        with store.connect() as db:
+            db.execute("INSERT INTO users VALUES (?,?,?,?,?,?,?,?)",
+                       (f"u{number}", f"old{number}@example.com", "", 1, "fixture", 0, "", number))
+            db.execute("INSERT INTO registration_jobs "
+                       "(id,batch_id,user_id,provider,state,phase,attempts,next_attempt_at,"
+                       "error_code,message,created_at) VALUES (?,'old',?,'agnes','PENDING',"
+                       "'PREPARE',0,0,'','',?)", (f"j{number}", f"u{number}", number))
+
+    add_job(1)
+    migrate_legacy(store)
+    batch_id = store.batches()[0]["id"]
+    add_job(2)
+    migrate_legacy(store)
+    assert store.tasks(batch_id)["summary"]["total"] == 2
+    with store.connect() as db:
+        db.execute("DELETE FROM registration_jobs WHERE id='j1'")
+    add_job(3)
+    assert migrate_legacy(store)["imported"] == 1
+    result = store.tasks(batch_id)
+    assert result["summary"]["total"] == result["total"] == 3
+    assert [(t["id"], t["index"]) for t in result["tasks"]] == [
+        ("legacy-j1", 1), ("legacy-j2", 2), ("legacy-j3", 3)]
+    assert migrate_legacy(store)["imported"] == 0

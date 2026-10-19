@@ -90,8 +90,11 @@ class RuntimeStore:
     def public_batch(row):
         if row is None:
             return None
-        return {k: row[k] for k in ("id", "script_id", "version", "site_id", "state",
-                                    "count", "created_at")}
+        result = {k: row[k] for k in ("id", "script_id", "version", "site_id", "state",
+                                     "count", "created_at")}
+        if row["state"] == "RUNNING" and row["stop"]:
+            result["state"] = "STOPPING"
+        return result
 
     def batches(self):
         with self.connect() as db:

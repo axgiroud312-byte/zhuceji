@@ -23,4 +23,7 @@
 
 ## 当前进展
 
-待开发；负责人、实施分支和 PR 待填写。实际邮箱来源、资源分配规则及旧配置迁移待调查。
+- 开发与受控资源验证完成，待整体 PR 评审。负责人：Astra / 资源执行 Agent；分支 `feat/modern-web-workbench`；[整体 PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)。
+- 已查实原生产邮箱为 Graph，动态代理通过独立 DPAPI + 本地 HTTP 上游的 MeteredRelay；沿用原链路。支持命名保存、健康检查、只读旧 TOML 配置导入及 Vault 加密，未知健康状态不冒充可用。
+- 邮箱领取原子互斥，提交后永久排除当前网站、跨网站可复用；快照固定 revision，任务代理固定 session，出口变化/TTL 到期失败，禁止直连回退。完整规则与实测证据见 [资源说明](../runtime-resources.md)。
+- 已验证临时 DPAPI/SQLite 重启、失败配置保护、耗尽/失效、并发领取、双层本地中继与源档案逐字节不变；外部真实邮箱/供应商未实测，见 [整体验收](../runtime-acceptance.md)。

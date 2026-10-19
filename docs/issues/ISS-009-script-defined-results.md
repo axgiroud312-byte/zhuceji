@@ -22,4 +22,7 @@
 
 ## 当前进展
 
-待开发；负责人、实施分支和 PR 待填写。现有固定 `api_key_ref` 的兼容映射待实现。
+- 开发与数据闭环验证完成，待整体 PR 评审。负责人：Astra；分支 `feat/modern-web-workbench`；[整体 PR #1](https://github.com/axgiroud312-byte/zhuceji/pull/1)。
+- 支持 string/number/integer/boolean、required/sensitive；缺必需字段、非法类型/非有限数、额外字段失败；可选缺失不造值。敏感结果保存在 Vault，默认隐藏，历史批次保留版本与字段快照。
+- 按批次 CSV 包含状态/原因/网站/版本/动态字段，显式明文导出；测试分隔符、引号、多行内容和公式防护。旧 email/password/API key 复制到加密历史映射，原引用保留。Excel 保留可选旧本机运行库，不作为普通安装必备能力。
+- 已在真实 UI + API 运行和导出；字段升级不改历史；实际测试与边界见 [整体验收](../runtime-acceptance.md)。
