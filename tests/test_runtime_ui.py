@@ -190,6 +190,20 @@ def upload_script(page, manifest=None):
     page.locator("#importSubmit").click()
 
 
+def test_legacy_config_import_form_sends_path_without_credentials(runtime_page):
+    page, mock = runtime_page
+    visit(page)
+    page.locator('[data-view="resources"]').click()
+    page.locator("#addResourceButton").click()
+    page.locator("#resourceName").fill("旧配置邮箱")
+    page.locator("#resourceSource").select_option("legacy")
+    page.locator("#legacyConfigPath").fill("config.production.toml")
+    page.locator("#resourceSubmit").click()
+    expect(page.locator("#resourceDialog")).not_to_be_visible()
+    payload = next(body for path, _, body in mock.calls if path == "resources/save")
+    assert payload["config"] == {"source": "legacy", "config_path": "config.production.toml"}
+
+
 def test_runtime_onboarding_resources_import_parameters_start_stop(runtime_page):
     page, mock = runtime_page
     visit(page)

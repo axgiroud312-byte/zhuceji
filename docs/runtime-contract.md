@@ -20,6 +20,7 @@ ctx 提供 `task_id, batch_id, index`（1 起）、`parameters`、`mailbox`、`p
 - `snapshot(bindings: dict, requirements: dict, count: int, site_id: str) -> dict`：验证数量/资源，返回仅内部使用且可 JSON 持久化的不可变引用快照。敏感配置只保存 Vault 引用。
 - `async acquire(snapshot, site_id, task_id) -> ResourceLease`：原子领取邮箱/代理，失败明确报错，不降级直连。
 - `async release(lease, *, submitted: bool, succeeded: bool) -> None`。
+- `mark_submitted(lease) -> None`：同步持久化邮箱消耗；框架先调用此方法，再保存任务提交标记，最后脚本才发送注册请求。
 - `recover() -> None`：仅持有全局 RunLock 后调用，释放崩溃租约，保留已提交邮箱占用。
 - lease 属性 `mailbox, proxy`。mailbox 至少提供 `email, secret_ref, baseline(), find_code(baseline)`，后两者异步；匹配通过 `configure(sender_domain=..., code_pattern=...)`。内置 Agnes 可使用 secret_ref + 原 Vault/OutlookMailbox，脚本不维护资源池。
 

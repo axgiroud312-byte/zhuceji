@@ -22,7 +22,7 @@ AGNES_PACKAGE = {
         "parameters": {},
         "result_fields": [
             {"key": "email", "label": "邮箱", "type": "string", "required": True,
-             "sensitive": False},
+             "sensitive": True},
             {"key": "password", "label": "密码", "type": "string", "required": True,
              "sensitive": True},
             {"key": "api_key", "label": "API Key", "type": "string", "required": True,

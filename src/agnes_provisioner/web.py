@@ -66,6 +66,17 @@ class WebAppController:
         finally:
             storage.close()
 
+        self._runtime = None
+
+    @property
+    def runtime(self):
+        from .script_runtime import ScriptRuntime
+
+        with self.lock:
+            if self._runtime is None:
+                self._runtime = ScriptRuntime(self.get_settings())
+            return self._runtime
+
     def log(self, message: str) -> None:
         stamp = time.strftime("%H:%M:%S")
         with self.lock:
@@ -258,6 +269,7 @@ class WebAppController:
 
         new_settings = Settings.model_validate(merged)
         save_settings(new_settings, self.config_path)
+        self._runtime = None
         self.log(f"已更新并保存流程与全局配置 -> {self.config_path.name}")
         return {"saved": True, "config_path": str(self.config_path)}
 
@@ -709,6 +721,16 @@ def make_handler(controller: WebAppController):
             return
 
         def _send_json(self, data: dict, status: int = 200) -> None:
+            # Windows may reset a connection closed with an unread POST body, hiding a
+            # useful 403/415 response. Drain bounded rejected bodies before replying.
+            if status >= 400 and self.command == "POST" and not getattr(self, "_body_read", False):
+                try:
+                    length = int(self.headers.get("Content-Length") or 0)
+                except ValueError:
+                    length = 0
+                if 0 < length <= 10 * 1024 * 1024:
+                    self.rfile.read(length)
+                self._body_read = True
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -724,6 +746,7 @@ def make_handler(controller: WebAppController):
             if length <= 0:
                 return {}
             raw = self.rfile.read(length)
+            self._body_read = True
             payload = json.loads(raw.decode("utf-8"))
             if not isinstance(payload, dict):
                 raise ValueError("请求内容必须为 JSON 对象。")
@@ -759,6 +782,38 @@ def make_handler(controller: WebAppController):
                     return
                 if path == "/api/overview":
                     self._send_json(controller.overview((query.get("batch") or [""])[0]))
+                    return
+                if path.startswith("/api/runtime/"):
+                    runtime = controller.runtime
+                    def value(key, default=""):
+                        return (query.get(key) or [default])[0]
+                    action = path.removeprefix("/api/runtime/")
+                    if action == "overview":
+                        self._send_json(runtime.overview())
+                    elif action == "tasks":
+                        self._send_json(runtime.store.tasks(
+                            value("batch"), state=value("state"), search=value("search"),
+                            offset=value("offset", "0"), limit=value("limit", "50"),
+                            reveal=value("reveal", "0") == "1",
+                        ))
+                    elif action == "events":
+                        self._send_json(runtime.store.events(
+                            value("batch"), value("task"), value("after", "0"),
+                            value("limit", "100"),
+                        ))
+                    elif action == "export":
+                        content = runtime.store.export_csv(
+                            value("batch"), value("include_secrets", "0") == "1")
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/csv; charset=utf-8")
+                        self.send_header("Content-Length", str(len(content)))
+                        self.send_header("Content-Disposition",
+                                         'attachment; filename="results.csv"')
+                        self.send_header("Cache-Control", "no-store")
+                        self.end_headers()
+                        self.wfile.write(content)
+                    else:
+                        self._send_json({"error": "Not Found"}, status=404)
                     return
                 if path == "/api/jobs":
                     batch = (query.get("batch") or [""])[0]
@@ -817,6 +872,26 @@ def make_handler(controller: WebAppController):
                     self._send_json({"error": "请使用 JSON 格式提交操作。"}, status=415)
                     return
                 payload = self._read_json()
+                if path.startswith("/api/runtime/"):
+                    runtime = controller.runtime
+                    action = path.removeprefix("/api/runtime/")
+                    if action == "scripts/import":
+                        result = {"script": runtime.store.import_package(payload)}
+                    elif action == "resources/save":
+                        result = runtime.save_resource(payload)
+                    elif action == "resources/check":
+                        result = runtime.check_resource(payload.get("id", ""))
+                    elif action == "start":
+                        result = runtime.start(payload)
+                    elif action == "stop":
+                        result = runtime.stop(payload.get("batch", ""))
+                    else:
+                        self._send_json({"error": "Not Found"}, status=404)
+                        return
+                    self._send_json(result)
+                    return
+                if controller._runtime and controller._runtime.overview()["active"]:
+                    raise StorageError("脚本运行中，请先停止并等待收尾后再修改旧配置。")
                 if path == "/api/backup":
                     self._send_json(controller.backup())
                     return
@@ -860,7 +935,7 @@ def serve_web(
     controller = WebAppController(config_path)
     server = ThreadingHTTPServer((host, port), make_handler(controller))
     url = f"http://{host}:{port}"
-    print(f"Agnes Web 控制台已启动：{url}", flush=True)
+    print(f"网站脚本运行台已启动：{url}", flush=True)
     if open_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:

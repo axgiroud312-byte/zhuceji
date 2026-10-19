@@ -36,7 +36,7 @@
 - 更新时增加已有资源的 `id`；完整替换配置，创建新版本。不能改变 `kind`。
 - `transport` 默认 `graph`，可选 `imap_oauth`、`imap_password`。密码方式允许每行 `邮箱----密码`；OAuth 方式需要 client ID 和 refresh token。
 - `accounts` 可为多行文本，也可为对象数组，字段为 `email`、`mailbox_password`、`client_id`、`refresh_token`，可带 `mailbox_transport`、`imap_host`、`imap_port`。邮箱忽略大小写，单份资源拒绝重复邮箱。
-- `config: {"source":"legacy"}` 显式从**当前配置数据库与 Vault**复制旧 users 对应邮箱。不会扫描外部生产库，也不会改写旧 users、jobs 或原凭证。需要迁移外部归档时，应先按整体迁移流程备份、选择正确副本。
+- `config: {"source":"legacy"}` 显式从**当前配置数据库与 Vault**复制旧 users 对应邮箱。可增加 `config_path: "config.production.toml"`，从指定旧配置定位数据库和 Vault，**只读复制**邮箱及已提交排除记录到当前资源库；不修改源数据或源凭证。界面有相应路径输入，无需重新粘贴凭证。不会自动扫描外部生产库。
 
 动态代理：
 
@@ -91,7 +91,7 @@
 
 - id/site_id：`agnes`；版本：`1.0.0`；邮箱、代理均为必需资源。
 - `async run(ctx)` 调用 `async run_agnes(ctx)`，复用 `AgnesAdapter` 和框架分配的 mailbox.secret_ref。脚本不创建或维护资源池。
-- 声明结果为 `email`、`password`、`api_key`，后两个是敏感必需字段。
+- 声明结果为 `email`、`password`、`api_key`，三者都是敏感必需字段。
 - 仅调用一次 `AgnesAdapter.execute`；适配器自己的 reconcile 是正常登录核查，不再次注册。`EMAIL_REQUESTED` 不等同于账号提交；`REGISTRATION_SUBMITTED` 和 `KEY_REQUESTED` 之前先校验固定代理，再调用 `ctx.mark_submitted()`。
 - 失败统一抛 `ScriptFailure(code,message)`：框架按提交边界判为 FAILED/UNKNOWN，不能据旧 RETRY_WAIT 等状态自动重试。`KEY_PENDING` 不伪装成已完成；必须确认激活且取得 API key。
 - Vault 保存任务执行/提交标记，直接再次调用同一任务也拒绝重复注册。密码、邮箱令牌、代理认证、结果 Key 注册到框架日志脱敏集合。所有返回、异常、取消路径都会关闭浏览器。

@@ -189,7 +189,7 @@ def legacy_fixture(manager):
         db.executescript("""
             CREATE TABLE users(id TEXT,email TEXT,secret_ref TEXT);
             CREATE TABLE registration_jobs(id TEXT,user_id TEXT,state TEXT,phase TEXT,
-                submitted_at REAL,created_at REAL);
+                submitted_at REAL,created_at REAL,provider TEXT DEFAULT 'agnes-api');
             CREATE TABLE bulk_requests(job_id TEXT,kind TEXT,at REAL);
         """)
         for index in range(4):
@@ -198,7 +198,8 @@ def legacy_fixture(manager):
                                    "refresh_token": "old-refresh", "mailbox_transport": "graph",
                                    "activated": index == 2, "mailbox_authorized": True})
             db.execute("INSERT INTO users VALUES(?,?,?)", (ref, email, ref))
-            db.execute("INSERT INTO registration_jobs VALUES(?,?,'PENDING','PREPARE',?,?)",
+            db.execute("INSERT INTO registration_jobs "
+                       "VALUES(?,?,'PENDING','PREPARE',?,?,'agnes-api')",
                        (ref, ref, 1 if index == 0 else None, time.time()))
         db.execute("INSERT INTO bulk_requests VALUES('legacy-1','REGISTRATION_SUBMITTED',1)")
 
@@ -235,6 +236,41 @@ def test_failed_vault_write_preserves_old_binding(manager, monkeypatch):
     with pytest.raises(OSError):
         manager.save(mailbox_payload("new@example.com", id=saved["id"]))
     assert manager.list() == before
+
+
+@pytest.mark.asyncio
+async def test_external_legacy_config_readonly_copy_preserves_sources_and_exclusions(manager,
+                                                                                   tmp_path):
+    from agnes_provisioner.config import Settings, save_settings
+
+    source_settings = Settings(database=tmp_path / "archive/source.db",
+                               vault=tmp_path / "archive/source.dpapi")
+    source = ResourceManager(source_settings)
+    legacy_fixture(source)
+    config_path = tmp_path / "archive/source.toml"
+    save_settings(source_settings, config_path)
+    before = {p: p.read_bytes() for p in
+              (source_settings.database, source_settings.vault, config_path)}
+    saved = manager.save({"name": "从旧配置复制", "kind": "mailbox",
+                          "config": {"source": "legacy", "config_path": str(config_path)}})
+    snapshot = bind(manager, saved, site="agnes")
+    lease = await manager.acquire(snapshot, "agnes", "copied-task")
+    assert lease.mailbox.email == "old3@example.com"
+    await manager.release(lease, submitted=False, succeeded=False)
+    assert {p: p.read_bytes() for p in before} == before
+    assert saved["summary"]["total"] == 4
+
+
+@pytest.mark.asyncio
+async def test_mock_legacy_success_does_not_consume_real_agnes_mailbox(manager):
+    legacy_fixture(manager)
+    with manager._connection(write=True) as db:
+        db.execute("UPDATE registration_jobs SET provider='mock',state='SUCCEEDED' "
+                   "WHERE id='legacy-3'")
+    saved = manager.save({"name": "旧资源", "kind": "mailbox", "config": {"source": "legacy"}})
+    lease = await manager.acquire(bind(manager, saved, site="agnes"), "agnes", "real-after-mock")
+    assert lease.mailbox.email == "old3@example.com"
+    await manager.release(lease, submitted=False, succeeded=False)
 
 
 @pytest.mark.parametrize("configuration", [

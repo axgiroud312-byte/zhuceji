@@ -274,7 +274,7 @@ def test_web_api_end_to_end(tmp_path):
             # 1. Load Web HTML
             html_res = client.get("/")
             assert html_res.status_code == 200
-            assert "Agnes 注册机可视化控制台" in html_res.text
+            assert "Runtime · 脚本运行工作台" in html_res.text
 
             # 2. Update flow & proxy rotation config via Web API
             cfg_res = client.post(

@@ -23,6 +23,7 @@ import httpx
 from email_validator import EmailNotValidError, validate_email
 
 from .bulk_relay import MeteredRelay
+from .config import load_settings
 from .mailbox import MailboxError, OutlookMailbox
 from .proxy import ProxyManager, parse_proxy_line
 from .vault import Vault, VaultError
@@ -227,8 +228,9 @@ class ResourceManager:
             rows = db.execute("""
                 SELECT u.email,j.id,COALESCE(j.submitted_at,j.created_at) AS at
                 FROM registration_jobs j JOIN users u ON u.id=j.user_id
-                WHERE j.submitted_at IS NOT NULL OR j.state='SUCCEEDED'
-                   OR j.phase IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED')
+                WHERE j.provider IN ('agnes','agnes-api','agnes-ai')
+                  AND (j.submitted_at IS NOT NULL OR j.state='SUCCEEDED'
+                   OR j.phase IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED'))
             """)
             db.executemany("INSERT OR IGNORE INTO resource_submissions VALUES('agnes',?,?,?)",
                            [(r["email"].casefold(), r["id"], r["at"]) for r in rows])
@@ -236,27 +238,63 @@ class ResourceManager:
             rows = db.execute("""
                 SELECT u.email,j.id,r.at FROM bulk_requests r
                 JOIN registration_jobs j ON j.id=r.job_id JOIN users u ON u.id=j.user_id
-                WHERE r.kind IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED')
+                WHERE j.provider IN ('agnes','agnes-api','agnes-ai')
+                  AND r.kind IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED')
             """)
             db.executemany("INSERT OR IGNORE INTO resource_submissions VALUES('agnes',?,?,?)",
                            [(r["email"].casefold(), r["id"], r["at"]) for r in rows])
 
     def _mailbox_config(self, config):
-        allowed = {"source", "transport", "accounts", "imap_host", "imap_port"}
+        allowed = {"source", "transport", "accounts", "imap_host", "imap_port", "config_path"}
         if set(config) - allowed:
             _fail("MAILBOX_CONFIG", "邮箱配置包含不支持的字段。")
         source = config.get("source", "outlook")
         if source == "legacy":
-            with self._connection() as db:
+            source_settings = self.settings
+            if config.get("config_path"):
+                try:
+                    source_settings = load_settings(Path(config["config_path"]))
+                except (OSError, ValueError, TypeError):
+                    _fail("LEGACY_CONFIG", "旧配置无法读取，请选择已有的 TOML 配置文件。")
+            if not Path(source_settings.database).is_file():
+                _fail("MAILBOX_EMPTY", "旧配置对应的数据库不存在。")
+            originals = Vault(source_settings.vault).snapshot()
+            try:
+                source_db = sqlite3.connect(Path(source_settings.database).as_uri() + "?mode=ro",
+                                            uri=True, timeout=30)
+            except sqlite3.Error:
+                _fail("LEGACY_DATABASE", "旧数据库无法只读打开，请检查配置和文件状态。")
+            source_db.row_factory = sqlite3.Row
+            exclusions = []
+            try:
+                db = source_db
                 exists = db.execute(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'",
                 ).fetchone()
                 if not exists:
                     _fail("MAILBOX_EMPTY", "当前数据库没有旧邮箱记录。")
                 users = list(db.execute("SELECT email,secret_ref FROM users"))
+                tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master "
+                                                  "WHERE type='table'")}
+                if "registration_jobs" in tables:
+                    exclusions.extend(r[0].casefold() for r in db.execute("""
+                        SELECT u.email FROM registration_jobs j JOIN users u ON u.id=j.user_id
+                        WHERE j.provider IN ('agnes','agnes-api','agnes-ai')
+                          AND (j.submitted_at IS NOT NULL OR j.state='SUCCEEDED'
+                           OR j.phase IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED'))
+                    """))
+                if {"bulk_requests", "registration_jobs"} <= tables:
+                    exclusions.extend(r[0].casefold() for r in db.execute("""
+                        SELECT u.email FROM bulk_requests r
+                        JOIN registration_jobs j ON j.id=r.job_id JOIN users u ON u.id=j.user_id
+                        WHERE j.provider IN ('agnes','agnes-api','agnes-ai')
+                          AND r.kind IN ('REGISTRATION_SUBMITTED','KEY_REQUESTED')
+                    """))
+            except sqlite3.Error:
+                _fail("LEGACY_DATABASE", "旧数据库结构不兼容或损坏，请先检查来源。")
+            finally:
+                source_db.close()
             rows = []
-            exclusions = []
-            originals = self.vault.snapshot()
             for user in users:
                 record = dict(originals.get(user["secret_ref"], {}))
                 if record.get("email", "").casefold() != user["email"].casefold():

@@ -1,82 +1,50 @@
-# 注册机 · Agnes Web 工作台
+# 网站脚本运行台
 
-管理 Agnes 开发者平台的用户清单、浏览器开户任务和 Excel 交付结果。任务状态保存在本地数据库，账号凭证保存在当前 Windows 用户的加密凭证库。
+导入外部 AI 编写的网站注册脚本，选择已保存的邮箱/动态代理资源，填写任务数量，运行并查看结果。脚本决定注册逻辑和结果字段；框架负责资源、调度、状态、日志、保存与导出。
 
 ## 打开工具
 
-- **方式一（最推荐）：双击根目录的 `启动Web界面.cmd`**（或运行 `uv run agnes --config config.local.toml web`），浏览器会自动打开可视化 Web 控制台 `http://127.0.0.1:8765`。在网页里可以直接批量粘贴导入账号、修改注册与拿结果流程、导入代理池并设置“每达成 X 次结果自动换 IP”。
-- **方式二：双击根目录的 `启动工具.cmd`**，输入 `W` 打开 Web 界面，或按菜单编号 `1-11` 操作。
-
-首次准备环境：需要 Windows、Python 3.12、uv 和 Chrome。在本目录打开 PowerShell：
+双击 **`启动Web界面.cmd`**，或运行：
 
 ```powershell
 uv sync --python 3.12
 if (-not (Test-Path config.local.toml)) { Copy-Item config.example.toml config.local.toml }
+uv run agnes --config config.local.toml web
 ```
 
-示例配置默认是本地模拟模式，不访问真实平台注册账号。若改用 Playwright 自带 Chromium，将配置中的 `browser_channel` 设置为 `"chromium"`，并执行 `uv run playwright install chromium`。
+入口：**http://127.0.0.1:8765**。需要 Windows、Python 3.12、uv、Chrome；使用 Playwright Chromium 时设置 `browser_channel = "chromium"` 并运行 `uv run playwright install chromium`。前端不依赖 Node 或远程 CDN。
 
-### Web 工作台
+## 使用
 
-工作台包含任务大盘、账号导入与核验、九节点流程编排、代理池与交付备份五个视图，不需要安装 Node 或联网加载前端组件。
+在 **资源设置** 保存命名邮箱与代理。此前 Agnes 实际路径是 Outlook Graph 收信，以及通过本地 HTTP 上游连接动态代理网关；支持相同连接方式，凭证加密保存，连接未检查不会显示为健康。配置可以长期复用；旧 users 和原代理 Vault 提供显式导入入口，外部生产隔离档案不自动扫描或改写。
 
-任务表铺满主工作面，统计收敛在顶部指标带。点击底部“运行终端”查看槽位和日志，再次点击即可收起；展开状态会记住，清空日志只清当前视图，不删除审计记录。模式使用紧凑分段按钮，可用鼠标、Tab、空格/Enter 或方向键切换；流程节点按需展开。
+在 **脚本库** 导入 JSON 脚本包；同一脚本新版本更新不覆盖历史版本。内置 Agnes 也是网站脚本，框架没有固定 API Key 结果列。可先导入 `examples/script-demo-accounts.json` 或 `examples/script-demo-tokens.json` 试用，无外部请求。
 
-导入时先看分列预览，再选择“新账号注册”或“已有账号登录核验”。顶部选择一个批次后才能启动，汇总视图不会误运行全部账号。任务勾选会在定时刷新、搜索及翻页时保留；点击账号行打开右侧详情、审计时间线与本地密码编辑。
+回到 **运行台** 选择脚本、邮箱、代理、数量后启动。**填 20 就创建 20 个任务**，失败保存原因，不补数量、不隐式重新注册。账号示例故意失败 3 条，用来检查 17 成功 / 3 失败。服务端保证同一时间一个运行批次，重复点击不会生成重复任务。停止后待执行任务取消，进行中任务完成或超时；提交后结果不明时标为“待核查”。
 
-密码和结果默认隐藏，可单行显示或直接复制完整值。导出也默认隐藏凭证；需要完整交付文件时，在“导出与备份”中显式勾选包含明文。更改本地密码不会修改远端平台密码。运行中不允许更改流程、账号密码或恢复中断任务。
+结果列按脚本声明显示。选择任务查看它的结构化日志，技术详情按需展开；历史批次和结果重启后可读取。默认隐藏敏感字段，显式显示/导出才解密。CSV 可直接下载；旧命令行 Excel 导出依赖可选本机 Excel 适配器，非普通安装必备能力。
 
-测试与验收见 [工作台总任务](docs/issues/ISS-000-modern-web-workbench-epic.md) 及 ISS-001～005；[ISS-005](docs/issues/ISS-005-enterprise-ui-decarding-and-contrast-workbench.md) 记录五视图、三视口、双主题的截图复验命令。工作台没有远程登录认证，请保持默认 `127.0.0.1`，不要直接暴露到公网。
+脚本是受信任的本机 Python 程序，不是沙箱；只导入已审阅的包，不自动安装依赖。编写接口见 [外部 AI 脚本说明](docs/script-authoring.md)。
 
-检查本地调度器：
+## 旧数据与凭证
+
+升级首次打开运行台时，将当前配置数据库里的旧任务复制成只读历史，不重新排队；原账号、批次、代理、凭证引用和旧流程配置保留。迁移前在数据库旁的 `runtime-backups/` 保存 SQLite 与 DPAPI 恢复副本，迁移可重复执行。旧自定义流程不自动转换成通用脚本；请保留原配置，按新接口重新编写。
+
+凭证仍由当前 Windows 用户 DPAPI 保护。迁移恢复需要同时保留数据库、Vault 和原配置，不能只复制 SQLite。公开仓库不包含真实账号、本地配置、代理认证、数据库、截图中的凭证或交付文件。
+
+## 验证与说明
 
 ```powershell
-uv run agnes demo --count 1000
+uv run pytest
+uv run ruff check
+git diff --check
 ```
 
-模拟任务使用 `output/demo/demo.db`，不访问 Agnes。查看 `output/demo/report.json` 中的实际并发、任务数和重复提交统计。
+当前产品依据：[ISS-006](docs/issues/ISS-006-script-runtime-workbench-epic.md) 及 ISS-007～012。旧 ISS-000～005 是历史记录；流程编排、录制和选择器编辑已退出当前产品。
 
-## 开始真实开户
+- [操作说明](docs/操作说明.md)
+- [脚本编写接口](docs/script-authoring.md)
+- [状态与持久化](docs/状态规则.md)
+- [本轮验收证据](docs/runtime-acceptance.md)
 
-公开仓库只包含示例配置，不包含真实账号、本地配置、代理认证、凭证库或生产交付文件。仅对你拥有明确授权的账号执行操作，并遵守目标平台规则。
-
-1. 将 `config.example.toml` 复制为 `config.local.toml`，设置 `mode = "agnes"`，记录本次授权范围和运行限制。
-2. 先确认邮箱域名可以在 [Agnes 开发者平台](https://platform.agnes-ai.com/login) 注册。
-3. 按 [用户资料格式](docs/操作说明.md#导入用户)准备用户 CSV。密码和 OAuth 令牌通过加密导入或隐藏输入保存。
-4. 为新用户创建一个批次，先执行一条任务，检查验证方式、登录身份和 API Key 页面。
-5. 单账号完整核验后，再继续处理同一批次的其余任务。
-
-```powershell
-uv run agnes --config config.local.toml import-users data/users.csv
-uv run agnes --config config.local.toml create-batch first-batch
-uv run agnes --config config.local.toml run first-batch --limit 1
-uv run agnes --config config.local.toml status first-batch
-```
-
-示例文件中的邮箱用于说明格式。真实开户时请替换为获准使用的真实邮箱。
-
-## 导出 Excel 与本地归档
-
-通过“导出与备份”页面导出，或使用命令行：
-
-```powershell
-# 单批次完整交付；省略 --include-secrets 则隐藏凭证
-uv run agnes --config config.local.toml export outputs/开户结果.xlsx --batch first-batch --include-secrets
-```
-
-Excel 包含邮箱账号、邮箱密码、已确认账号的 Agnes 登录密码、API Key、状态和原因。已完成账号优先展示；混合批次的未完成记录另放一页。没有取得的 API Key 留空。CSV 导出使用 `.csv` 后缀。
-
-含凭证的导出文件使用 `--include-secrets`；省略此选项时隐藏邮箱和凭证。
-
-`data/`、`output/`、`outputs/`、本地/生产配置、数据库、DPAPI 文件和导出文件均由 `.gitignore` 排除。请不要用 `git add -f` 提交这些资料；加密凭证也不应上传公共仓库。示例账号仅为虚构测试数据。
-
-Excel 导出沿用可选的 Codex 本机 Excel 适配器，需要额外的本机运行库；该运行库不随公开仓库分发，也不属于 Web 前端依赖。普通安装可以使用 CSV 导出，账号管理、流程编排和备份不依赖该适配器。
-
-生产隔离迁移入口 `bulk prepare` 不会自动读取桌面档案，必须显式指定 `--source`、`--sample`、`--report`；如需识别旧库账号，另传 `--legacy`。真实生产档案说明和一次性救援脚本只保留在本机，不随仓库发布。
-
-## 查看说明
-
-- [导入、代理、暂停恢复及核验](docs/操作说明.md)
-- [状态与持久化规则](docs/状态规则.md)
-
-配置字段以 `src/agnes_provisioner/config.py` 中的 `Settings`、`Approval` 和 `KeyFlow` 为准。平台页面变化时，先用一个账号核对配置，再继续整个批次。
+工作台是本机工具，没有远程账号系统，请保持默认 `127.0.0.1`。旧 CLI 和生产隔离工具保留兼容用途，其旧重试/流程配置不代表新脚本运行台语义。

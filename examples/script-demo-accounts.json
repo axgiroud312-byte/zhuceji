@@ -1,0 +1,19 @@
+{
+  "manifest": {
+    "api_version": 1,
+    "id": "demo-accounts",
+    "site_id": "local-demo-accounts",
+    "name": "本地示例 · 账号结果（无外部请求）",
+    "version": "1.0.0",
+    "entrypoint": "run",
+    "resources": {"mailbox": false, "proxy": false},
+    "parameters": {"fail_indices": [3, 8, 16], "delay": 0.05},
+    "result_fields": [
+      {"key": "account", "label": "账号", "type": "string", "required": true, "sensitive": false},
+      {"key": "password", "label": "密码", "type": "string", "required": true, "sensitive": true},
+      {"key": "api_key", "label": "API Key", "type": "string", "required": true, "sensitive": true}
+    ],
+    "dependencies": []
+  },
+  "source": "import asyncio\nfrom agnes_provisioner.script_contract import ScriptFailure\n\nasync def run(ctx):\n    ctx.log('本地受控示例，不访问真实网站。', stage='prepare')\n    await asyncio.sleep(float(ctx.parameters['delay']))\n    if ctx.index in ctx.parameters['fail_indices']:\n        raise ScriptFailure('DEMO_FAILURE', '预设失败，用于核对不补数量。')\n    password = 'demo-password-' + str(ctx.index)\n    key = 'demo-key-' + str(ctx.index)\n    ctx.register_secret(password)\n    ctx.register_secret(key)\n    ctx.mark_submitted()\n    return {'account': 'demo-' + str(ctx.index), 'password': password, 'api_key': key}\n\nasync def close(ctx):\n    ctx.log('示例资源已清理。', stage='cleanup')\n"
+}

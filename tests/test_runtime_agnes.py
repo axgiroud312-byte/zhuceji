@@ -201,7 +201,9 @@ async def test_adapter_cleanup_on_cancellation(context, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_real_browser_agnes_graph_and_http_proxy_closed_loop(tmp_path, monkeypatch):
+@pytest.mark.parametrize("via_runtime", [False, True])
+async def test_real_browser_agnes_graph_and_http_proxy_closed_loop(tmp_path, monkeypatch,
+                                                                  via_runtime):
     """Actual Chromium + HTTP proxy, controlled Graph responses; zero external service calls."""
     state = {"email_requested": False, "registrations": [], "proxy_checks": 0, "graph_reads": 0}
     email = "browser-test@example.com"
@@ -252,7 +254,11 @@ async def test_real_browser_agnes_graph_and_http_proxy_closed_loop(tmp_path, mon
                 payload = json.loads(body)
                 with manager._connection() as db:
                     marked = db.execute("SELECT submitted FROM resource_leases "
-                                        "WHERE task_id='test-task'").fetchone()[0]
+                                        "WHERE email=? ORDER BY created_at DESC LIMIT 1",
+                                        (email,)).fetchone()[0]
+                    if via_runtime:
+                        marked = marked and db.execute(
+                            "SELECT submitted FROM rt_tasks LIMIT 1").fetchone()[0]
                 state["registrations"].append({**payload, "marked_before_request": bool(marked)})
                 status = 200 if payload == {"email": email, "code": "314159"} and marked else 400
                 response, content_type = '{"code":200}', "application/json"
@@ -320,22 +326,40 @@ async def test_real_browser_agnes_graph_and_http_proxy_closed_loop(tmp_path, mon
             "source": "dynamic", "server": f"http://127.0.0.1:{server.sockets[0].getsockname()[1]}",
             "check_url": "http://runtime-browser.test/ip",
         }})
-        snapshot = manager.snapshot({"mailbox": mailbox["id"], "proxy": proxy["id"]},
-                                    {"mailbox": True, "proxy": True}, 1, "agnes")
-        lease = await manager.acquire(snapshot, "agnes", "test-task")
-        ctx = Context(settings, lease, manager)
-        result = await run_agnes(ctx)
+        if via_runtime:
+            from agnes_provisioner.script_runtime import ScriptRuntime
+
+            runtime = ScriptRuntime(settings, resources=manager)
+            batch = runtime.start({"script_id": "agnes", "version": "1.0.0", "count": 1,
+                                   "request_id": "agnes-real-runtime-test",
+                                   "bindings": {"mailbox": mailbox["id"], "proxy": proxy["id"]}
+                                   })["batch"]
+            await asyncio.to_thread(runtime.worker.join, 30)
+            assert not runtime.worker.is_alive()
+            task = runtime.store.tasks(batch["id"], reveal=True)["tasks"][0]
+            assert task["state"] == "SUCCEEDED", task["message"]
+            result = task["results"]
+            assert result_key not in json.dumps(runtime.store.events(batch["id"]))
+            assert result_key.encode() not in settings.database.read_bytes()
+            assert runtime.store.tasks(batch["id"])["tasks"][0]["results"]["api_key"] == "••••••"
+        else:
+            snapshot = manager.snapshot({"mailbox": mailbox["id"], "proxy": proxy["id"]},
+                                        {"mailbox": True, "proxy": True}, 1, "agnes")
+            lease = await manager.acquire(snapshot, "agnes", "test-task")
+            ctx = Context(settings, lease, manager)
+            result = await run_agnes(ctx)
+            assert result["password"] in ctx.secrets
         assert result["email"] == email
         assert result["api_key"] == result_key
-        assert result["password"] in ctx.secrets
         assert state["registrations"] == [{"email": email, "code": "314159",
                                             "marked_before_request": True}]
         assert state["proxy_checks"] >= 2 and state["graph_reads"] >= 5
-        with pytest.raises(ScriptFailure) as error:
-            await run_agnes(ctx)
-        assert error.value.code == "AGNES_ALREADY_SUBMITTED"
+        if not via_runtime:
+            with pytest.raises(ScriptFailure) as error:
+                await run_agnes(ctx)
+            assert error.value.code == "AGNES_ALREADY_SUBMITTED"
+            await manager.release(lease, submitted=ctx.submitted, succeeded=True)
         assert len(state["registrations"]) == 1
-        await manager.release(lease, submitted=ctx.submitted, succeeded=True)
         with pytest.raises(ResourceError) as error:
             manager.snapshot({"mailbox": mailbox["id"]}, {"mailbox": True}, 1, "agnes")
         assert error.value.code == "MAILBOX_EXHAUSTED"
