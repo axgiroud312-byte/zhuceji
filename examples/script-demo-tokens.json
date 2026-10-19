@@ -1,0 +1,20 @@
+{
+  "manifest": {
+    "api_version": 1,
+    "id": "demo-tokens",
+    "site_id": "local-demo-tokens",
+    "name": "本地示例 · Token 与数值（无外部请求）",
+    "version": "1.0.0",
+    "entrypoint": "run",
+    "resources": {"mailbox": false, "proxy": false},
+    "parameters": {},
+    "result_fields": [
+      {"key": "token", "label": "Token", "type": "string", "required": true, "sensitive": true},
+      {"key": "url", "label": "结果链接", "type": "string", "required": true, "sensitive": false},
+      {"key": "credits", "label": "额度", "type": "number", "required": true, "sensitive": false},
+      {"key": "enabled", "label": "已启用", "type": "boolean", "required": false, "sensitive": false}
+    ],
+    "dependencies": []
+  },
+  "source": "async def run(ctx):\n    ctx.log('输出另一组声明字段；无需修改框架。')\n    token = 'demo-token-' + str(ctx.index)\n    ctx.register_secret(token)\n    return {'token': token, 'url': 'https://example.com/result/' + str(ctx.index), 'credits': 12.5, 'enabled': True}\n"
+}

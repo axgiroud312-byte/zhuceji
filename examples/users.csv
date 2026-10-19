@@ -1,0 +1,2 @@
+user_id,email,consent,consent_reference,display_name,mailbox_authorized,secret_ref
+sample-001,sample-001@example.com,true,示例用户授权记录,示例用户,false,sample-001
